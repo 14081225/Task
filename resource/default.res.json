@@ -1,0 +1,80 @@
+{
+	"groups": [
+		{
+			"keys": "bg_jpg,egret_icon_png,description_json,!_png,NPC_1_png,NPC_2_png,panel_png,任务_png,取消_png,完成_png,对话框_png,接受_png,问号_png,问号淡_png",
+			"name": "preload"
+		}
+	],
+	"resources": [
+		{
+			"name": "bg_jpg",
+			"type": "image",
+			"url": "assets/bg.jpg"
+		},
+		{
+			"name": "egret_icon_png",
+			"type": "image",
+			"url": "assets/egret_icon.png"
+		},
+		{
+			"name": "description_json",
+			"type": "json",
+			"url": "config/description.json"
+		},
+		{
+			"name": "!_png",
+			"type": "image",
+			"url": "assets/picture1115/!.png"
+		},
+		{
+			"name": "NPC_1_png",
+			"type": "image",
+			"url": "assets/picture1115/NPC_1.png"
+		},
+		{
+			"name": "NPC_2_png",
+			"type": "image",
+			"url": "assets/picture1115/NPC_2.png"
+		},
+		{
+			"name": "panel_png",
+			"type": "image",
+			"url": "assets/picture1115/panel.png"
+		},
+		{
+			"name": "任务_png",
+			"type": "image",
+			"url": "assets/picture1115/任务.png"
+		},
+		{
+			"name": "取消_png",
+			"type": "image",
+			"url": "assets/picture1115/取消.png"
+		},
+		{
+			"name": "完成_png",
+			"type": "image",
+			"url": "assets/picture1115/完成.png"
+		},
+		{
+			"name": "对话框_png",
+			"type": "image",
+			"url": "assets/picture1115/对话框.png"
+		},
+		{
+			"name": "接受_png",
+			"type": "image",
+			"url": "assets/picture1115/接受.png"
+		},
+		{
+			"name": "问号_png",
+			"type": "image",
+			"url": "assets/picture1115/问号.png"
+		},
+		{
+			"name": "问号淡_png",
+			"type": "image",
+			"url": "assets/picture1115/问号淡.png"
+		}
+	]
+}
