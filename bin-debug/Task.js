@@ -45,7 +45,7 @@ var TaskPanel = (function (_super) {
         for (i; i < this.nowtaskList.length && this.nowtaskList.length != 0; i++) {
             var tx = new egret.TextField();
             this.textField.push(tx);
-            this.textField[i].text = this.nowtaskList[i].name + "  " + this.nowtaskList[i].desc;
+            this.textField[i].text = this.nowtaskList[i].name + "  " + this.nowtaskList[i].desc + " " + this.nowtaskList[i].howso();
             this.addChild(this.textField[i]);
             this.textField[i].x = 100;
             this.textField[i].y = 200 + 100 * i;
@@ -157,8 +157,59 @@ var DialoguePanel = (function (_super) {
     return DialoguePanel;
 }(egret.DisplayObjectContainer));
 egret.registerClass(DialoguePanel,'DialoguePanel');
+var TaskCondition = (function () {
+    function TaskCondition() {
+        this.total = -100;
+    }
+    var d = __define,c=TaskCondition,p=c.prototype;
+    p.onAccept = function (Task) { };
+    p.onsubmit = function (Task) { };
+    p.onChange = function (taCC) {
+    };
+    return TaskCondition;
+}());
+egret.registerClass(TaskCondition,'TaskCondition');
+var NPCTalkTaskCondition = (function (_super) {
+    __extends(NPCTalkTaskCondition, _super);
+    function NPCTalkTaskCondition() {
+        _super.apply(this, arguments);
+        this.total = 0;
+    }
+    var d = __define,c=NPCTalkTaskCondition,p=c.prototype;
+    p.onAccept = function (Task) { };
+    p.onsubmit = function (Task) { };
+    p.onChange = function (taCC) {
+        var cur = taCC.getcurrent();
+        cur++;
+        taCC.setcurrent(cur);
+    };
+    return NPCTalkTaskCondition;
+}(TaskCondition));
+egret.registerClass(NPCTalkTaskCondition,'NPCTalkTaskCondition');
+var KillMonsterTaskCondition = (function (_super) {
+    __extends(KillMonsterTaskCondition, _super);
+    function KillMonsterTaskCondition(total) {
+        _super.call(this);
+        this.total = 0;
+        this.total = total;
+    }
+    var d = __define,c=KillMonsterTaskCondition,p=c.prototype;
+    p.onAccept = function (task) {
+    };
+    p.onsubmit = function (task) {
+    };
+    p.onChange = function (taCC) {
+        var cur = taCC.getcurrent();
+        cur++;
+        taCC.setcurrent(cur);
+    };
+    return KillMonsterTaskCondition;
+}(TaskCondition));
+egret.registerClass(KillMonsterTaskCondition,'KillMonsterTaskCondition',["Observer"]);
 var Task = (function () {
-    function Task(id, name, desc, status, fromNPCid, toNPCid) {
+    function Task(id, name, desc, status, fromNPCid, toNPCid, condition, neTaId) {
+        this.current = 0;
+        this.total = -1;
         this.id = id;
         this.desc = desc;
         this.name = name;
@@ -166,11 +217,60 @@ var Task = (function () {
         this.status = status;
         this.fromNPCid = fromNPCid;
         this.toNPCid = toNPCid;
+        this.taskCondition = condition;
+        this.total = this.taskCondition.total;
+        this.nextTaskid = neTaId;
     }
     var d = __define,c=Task,p=c.prototype;
+    p.getcurrent = function () {
+        return this.current;
+    };
+    p.setcurrent = function (newcurreny) {
+        this.current = newcurreny;
+        this.checkStatus();
+    };
+    p.onCanAccept = function () {
+        this.status = 1;
+        var tasS = TaskService.getInstance();
+        tasS.notify(this);
+    };
+    p.onAccept = function () {
+        this.status = 2;
+        var tasS = TaskService.getInstance();
+        tasS.notify(this);
+        this.checkStatus();
+    };
+    p.onReach = function () {
+        this.status = 3;
+        var tasS = TaskService.getInstance();
+        tasS.notify(this);
+    };
+    p.onFinish = function () {
+        this.status = 4;
+        var tasS = TaskService.getInstance();
+        tasS.notify(this);
+        if (this.nextTaskid != null) {
+            tasS.canAccept(this.nextTaskid);
+        }
+    };
+    p.checkStatus = function () {
+        if (this.current >= this.total) {
+            this.onReach();
+        }
+    };
+    p.getMyCondition = function () {
+        return this.taskCondition;
+    };
+    p.howso = function () {
+        var so = "(" + this.current + "/" + this.total + ")";
+        if (this.total <= 0) {
+            so = "";
+        }
+        return so;
+    };
     return Task;
 }());
-egret.registerClass(Task,'Task');
+egret.registerClass(Task,'Task',["TaskConditionContext"]);
 var NPC = (function (_super) {
     __extends(NPC, _super);
     function NPC(i, dp) {
@@ -244,6 +344,14 @@ var NPC = (function (_super) {
     return NPC;
 }(egret.DisplayObjectContainer));
 egret.registerClass(NPC,'NPC',["Observer"]);
+/*fail
+interface  EventEmitter {
+
+//    addObserver();
+    notify();
+
+}
+*/
 var TaskService = (function () {
     function TaskService() {
         this.observerList = [];
@@ -264,8 +372,7 @@ var TaskService = (function () {
         for (var _i = 0, _a = this.taskList; _i < _a.length; _i++) {
             var ta = _a[_i];
             if (ta.id == id) {
-                ta.status = TaskStatus.SUBMITTED;
-                this.notify(ta);
+                ta.onFinish();
             }
         }
     };
@@ -273,8 +380,15 @@ var TaskService = (function () {
         for (var _i = 0, _a = this.taskList; _i < _a.length; _i++) {
             var task = _a[_i];
             if (task.id == id) {
-                task.status = TaskStatus.CAN_SUBMIT;
-                this.notify(task);
+                task.onAccept();
+            }
+        }
+    };
+    p.canAccept = function (id) {
+        for (var _i = 0, _a = this.taskList; _i < _a.length; _i++) {
+            var task = _a[_i];
+            if (task.id == id) {
+                task.onCanAccept();
             }
         }
     };
@@ -291,6 +405,35 @@ var TaskService = (function () {
     return TaskService;
 }());
 egret.registerClass(TaskService,'TaskService');
+var SenService = (function () {
+    function SenService() {
+        this.observerList = [];
+    }
+    var d = __define,c=SenService,p=c.prototype;
+    p.notify = function (ta) {
+        for (var _i = 0, _a = this.observerList; _i < _a.length; _i++) {
+            var ob = _a[_i];
+            ob.onChange(ta);
+        }
+    };
+    return SenService;
+}());
+egret.registerClass(SenService,'SenService');
+var MonsterKillButton = (function (_super) {
+    __extends(MonsterKillButton, _super);
+    function MonsterKillButton() {
+        _super.apply(this, arguments);
+    }
+    var d = __define,c=MonsterKillButton,p=c.prototype;
+    p.onButtonClick = function (ta) {
+        console.log("经验+1");
+        if (ta.status == 2) {
+            this.mySS.notify(ta);
+        }
+    };
+    return MonsterKillButton;
+}(egret.DisplayObjectContainer));
+egret.registerClass(MonsterKillButton,'MonsterKillButton');
 var TaskStatus;
 (function (TaskStatus) {
     TaskStatus[TaskStatus["UNACCEPTABLE"] = 0] = "UNACCEPTABLE";
@@ -300,11 +443,12 @@ var TaskStatus;
     TaskStatus[TaskStatus["SUBMITTED"] = 4] = "SUBMITTED";
 })(TaskStatus || (TaskStatus = {}));
 var Tasks = [
-    { id: "task_00", name: "找小白", desc: "请跟白色的狗对话", status: 1, fromNPCid: "npc_0", toNPCid: "npc_1" },
+    { id: "task_00", name: "灯笼", desc: "请跟右边的狗对话", status: 1, fromNPCid: "npc_0", toNPCid: "npc_1", condition: new NPCTalkTaskCondition(), nexttaskid: "task_01" },
+    { id: "task_01", name: "小白", desc: "请点击那只鸟", status: 0, fromNPCid: "npc_1", toNPCid: "npc_1", condition: new KillMonsterTaskCondition(10), nexttaskid: null },
 ];
 var NPCs = [
-    { id: "npc_0", name: "灯笼", word: "唉嘿嘿", photo: "NPC_1_png" },
-    { id: "npc_1", name: "小白", word: "你咬我呀", photo: "NPC_2_png" },
+    { id: "npc_0", name: "啊", word: "唉嘿嘿", photo: "NPC_1_png" },
+    { id: "npc_1", name: "呵呵", word: "哈哈哈哈哈", photo: "NPC_2_png" },
 ];
 var emojis = [
     { name: "" },
@@ -313,4 +457,4 @@ var emojis = [
     { name: "问号_png" },
     { name: "" },
 ];
-//# sourceMappingURL=Task.js.map
+//# sourceMappingURL=task.js.map

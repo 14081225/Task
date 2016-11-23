@@ -119,7 +119,8 @@ var Main = (function (_super) {
         var TaskButton = this.createBitmapByName("任务_png");
         TaskButton.x = this.stage.stageWidth - TaskButton.width;
         TaskButton.y = 0;
-        var task0 = new Task(Tasks[0].id, Tasks[0].name, Tasks[0].desc, TaskStatus.ACCEPTABLE, Tasks[0].fromNPCid, Tasks[0].toNPCid);
+        var task0 = new Task(Tasks[0].id, Tasks[0].name, Tasks[0].desc, TaskStatus.ACCEPTABLE, Tasks[0].fromNPCid, Tasks[0].toNPCid, Tasks[0].condition, Tasks[0].nexttaskid);
+        var task1 = new Task(Tasks[1].id, Tasks[1].name, Tasks[1].desc, TaskStatus.UNACCEPTABLE, Tasks[1].fromNPCid, Tasks[1].toNPCid, Tasks[1].condition, Tasks[1].nexttaskid);
         this.addChild(npc_0);
         this.addChild(npc_1);
         this.addChild(TaskButton);
@@ -131,6 +132,7 @@ var Main = (function (_super) {
         taskser.observerList.push(npc_0);
         taskser.observerList.push(npc_1);
         taskser.taskList.push(task0);
+        taskser.taskList.push(task1);
         TaskButton.touchEnabled = true;
         npc_0.touchEnabled = true;
         npc_1.touchEnabled = true;
@@ -138,6 +140,18 @@ var Main = (function (_super) {
         TaskButton.addEventListener(egret.TouchEvent.TOUCH_TAP, function () { return (_this.showTaskPanel(taskPanel)); }, this);
         npc_1.addEventListener(egret.TouchEvent.TOUCH_TAP, function () { _this.NPCisClick(npc_1, dp); }, this);
         taskser.notify(taskser.taskList[0]);
+        var MB = new MonsterKillButton();
+        MB.photo = this.createBitmapByName("egret_icon_png");
+        var SS = new SenService();
+        var m = task1.getMyCondition();
+        SS.observerList.push(m);
+        MB.mySS = (SS);
+        this.addChild(MB);
+        MB.addChild(MB.photo);
+        MB.x = 0;
+        MB.y = this.stage.height - MB.photo.height;
+        MB.addEventListener(egret.TouchEvent.TOUCH_TAP, function () { MB.onButtonClick(task1); }, this);
+        MB.touchEnabled = true;
     };
     p.showTaskPanel = function (taskPanel) {
         this.addChild(taskPanel);

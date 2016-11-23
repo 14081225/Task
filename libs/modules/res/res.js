@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -240,7 +240,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -308,7 +308,7 @@ var RES;
          * 根据组名获取原始的组加载项列表
          * @method RES.ResourceConfig#getRawGroupByName
          * @param name {string} 组名
-         * @returns {any[]}
+         * @returns {Array<any>}
          */
         p.getRawGroupByName = function (name) {
             if (this.groupDic[name])
@@ -320,7 +320,7 @@ var RES;
          * 可以监听ResourceEvent.CONFIG_COMPLETE事件来确认配置加载完成。
          * @method RES.ResourceConfig#createGroup
          * @param name {string} 要创建的加载资源组的组名
-         * @param keys {egret.string[]} 要包含的键名列表，key对应配置文件里的name属性或sbuKeys属性的一项或一个资源组名。
+         * @param keys {egret.Array<string>} 要包含的键名列表，key对应配置文件里的name属性或sbuKeys属性的一项或一个资源组名。
          * @param override {boolean} 是否覆盖已经存在的同名资源组,默认false。
          * @returns {boolean}
          */
@@ -343,7 +343,7 @@ var RES;
                     }
                 }
                 else {
-                    var item = this.keyMap[key];
+                    item = this.keyMap[key];
                     if (item) {
                         if (group.indexOf(item) == -1)
                             group.push(item);
@@ -369,8 +369,8 @@ var RES;
                 return;
             var resources = data["resources"];
             if (resources) {
-                var length_1 = resources.length;
-                for (var i = 0; i < length_1; i++) {
+                var length = resources.length;
+                for (var i = 0; i < length; i++) {
                     var item = resources[i];
                     var url = item.url;
                     if (url && url.indexOf("://") == -1)
@@ -380,15 +380,15 @@ var RES;
             }
             var groups = data["groups"];
             if (groups) {
-                var length_2 = groups.length;
-                for (var i = 0; i < length_2; i++) {
+                length = groups.length;
+                for (i = 0; i < length; i++) {
                     var group = groups[i];
                     var list = [];
                     var keys = group.keys.split(",");
                     var l = keys.length;
                     for (var j = 0; j < l; j++) {
-                        var name_1 = keys[j].trim();
-                        var item = this.keyMap[name_1];
+                        var name = keys[j].trim();
+                        item = this.keyMap[name];
                         if (item && list.indexOf(item) == -1) {
                             list.push(item);
                         }
@@ -418,8 +418,8 @@ var RES;
             if (item.hasOwnProperty("subkeys")) {
                 var subkeys = (item.subkeys).split(",");
                 item.subkeys = subkeys;
-                var length_3 = subkeys.length;
-                for (var i = 0; i < length_3; i++) {
+                var length = subkeys.length;
+                for (var i = 0; i < length; i++) {
                     var key = subkeys[i];
                     if (this.keyMap[key] != null)
                         continue;
@@ -477,7 +477,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -596,9 +596,9 @@ var RES;
                 return;
             if (!list || list.length == 0) {
                 egret.$warn(3201, groupName);
-                var event_1 = new RES.ResourceEvent(RES.ResourceEvent.GROUP_LOAD_ERROR);
-                event_1.groupName = groupName;
-                this.dispatchEvent(event_1);
+                var event = new RES.ResourceEvent(RES.ResourceEvent.GROUP_LOAD_ERROR);
+                event.groupName = groupName;
+                this.dispatchEvent(event);
                 return;
             }
             if (this.priorityQueue[priority])
@@ -727,12 +727,13 @@ var RES;
         p.removeGroupName = function (groupName) {
             for (var p in this.priorityQueue) {
                 var queue = this.priorityQueue[p];
+                var length = queue.length;
                 var index = 0;
                 var found = false;
-                var length_4 = queue.length;
-                for (var i = 0; i < length_4; i++) {
-                    var name_2 = queue[i];
-                    if (name_2 == groupName) {
+                var length = queue.length;
+                for (var i = 0; i < length; i++) {
+                    var name = queue[i];
+                    if (name == groupName) {
                         queue.splice(index, 1);
                         found = true;
                         break;
@@ -754,7 +755,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -984,7 +985,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1089,7 +1090,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1227,7 +1228,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1371,7 +1372,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1416,7 +1417,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1477,7 +1478,7 @@ var RES;
 })(RES || (RES = {}));
 ////////////////////////////////////////////////////////////////////////////////////////
 ////
-////  Copyright (c) 2014-present, Egret Technology.
+////  Copyright (c) 2014-2015, Egret Technology Inc.
 ////  All rights reserved.
 ////  Redistribution and use in source and binary forms, with or without
 ////  modification, are permitted provided that the following conditions are met:
@@ -1633,14 +1634,14 @@ var RES;
             var textureMap = this.textureMap;
             for (var subkey in frames) {
                 var config = frames[subkey];
-                var texture_1 = spriteSheet.createTexture(subkey, config.x, config.y, config.w, config.h, config.offX, config.offY, config.sourceW, config.sourceH);
+                var texture = spriteSheet.createTexture(subkey, config.x, config.y, config.w, config.h, config.offX, config.offY, config.sourceW, config.sourceH);
                 if (config["scale9grid"]) {
                     var str = config["scale9grid"];
                     var list = str.split(",");
-                    texture_1["scale9Grid"] = new egret.Rectangle(parseInt(list[0]), parseInt(list[1]), parseInt(list[2]), parseInt(list[3]));
+                    texture["scale9Grid"] = new egret.Rectangle(parseInt(list[0]), parseInt(list[1]), parseInt(list[2]), parseInt(list[3]));
                 }
                 if (textureMap[subkey] == null) {
-                    textureMap[subkey] = texture_1;
+                    textureMap[subkey] = texture;
                     if (name) {
                         this.addSubkey(subkey, name);
                     }
@@ -1652,7 +1653,7 @@ var RES;
             var sheet = this.fileDic[name];
             if (sheet) {
                 delete this.fileDic[name];
-                var texture = void 0;
+                var texture;
                 for (var subkey in sheet._textureMap) {
                     if (texture == null) {
                         texture = sheet._textureMap[subkey];
@@ -1660,9 +1661,6 @@ var RES;
                         texture = null;
                     }
                     delete this.textureMap[subkey];
-                }
-                if (sheet.dispose) {
-                    sheet.dispose();
                 }
                 return true;
             }
@@ -1694,7 +1692,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1772,7 +1770,7 @@ var RES;
                 file = pngLine.substring(0, index);
             }
             url = url.split("\\").join("/");
-            index = url.lastIndexOf("/");
+            var index = url.lastIndexOf("/");
             if (index != -1) {
                 url = url.substring(0, index + 1) + file;
             }
@@ -1793,7 +1791,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1914,7 +1912,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1975,7 +1973,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -2006,7 +2004,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -2053,11 +2051,11 @@ var RES;
     
                 todo
     
-                let self = this;
+                var self = this;
     
-                let virtualUrl:string = "all.manifest";
+                var virtualUrl:string = "all.manifest";
     
-                let httpLoader:egret.HttpRequest = new egret.HttpRequest();
+                var httpLoader:egret.HttpRequest = new egret.HttpRequest();
                 httpLoader.addEventListener(egret.Event.COMPLETE, onLoadComplete, this);
                 httpLoader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
     
@@ -2088,7 +2086,7 @@ var RES;
             };
             /**
              * 获取所有有变化的文件
-             * @returns {any[]}
+             * @returns {Array<any>}
              */
             p.getChangeList = function () {
                 return [];
@@ -2122,7 +2120,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -2211,7 +2209,7 @@ var RES;
             };
             /**
              * 获取所有有变化的文件
-             * @returns {any[]}
+             * @returns {Array<any>}
              */
             p.getChangeList = function () {
                 var temp = [];
@@ -2260,7 +2258,7 @@ var RES;
 })(RES || (RES = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -2935,7 +2933,7 @@ var RES;
          * 可以监听ResourceEvent.CONFIG_COMPLETE事件来确认配置加载完成。
          * @method RES.ResourceConfig#createGroup
          * @param name {string} 要创建的加载资源组的组名
-         * @param keys {egret.string[]} 要包含的键名列表，key对应配置文件里的name属性或一个资源组名。
+         * @param keys {egret.Array<string>} 要包含的键名列表，key对应配置文件里的name属性或一个资源组名。
          * @param override {boolean} 是否覆盖已经存在的同名资源组,默认false。
          * @returns {boolean}
          */
@@ -2954,8 +2952,8 @@ var RES;
          */
         p.onGroupComp = function (event) {
             if (event.groupName == Resource.GROUP_CONFIG) {
-                var length_5 = this.loadingConfigList.length;
-                for (var i = 0; i < length_5; i++) {
+                var length = this.loadingConfigList.length;
+                for (var i = 0; i < length; i++) {
                     var config = this.loadingConfigList[i];
                     var resolver = this.$getAnalyzerByType(config.type);
                     var data = resolver.getRes(config.url);
@@ -3005,7 +3003,7 @@ var RES;
         p.hasRes = function (key) {
             var type = this.resConfig.getType(key);
             if (type == "") {
-                var prefix = RES.AnalyzerBase.getStringTail(key);
+                var prefix = RES.AnalyzerBase.getStringPrefix(key);
                 type = this.resConfig.getType(prefix);
                 if (type == "") {
                     return false;
@@ -3188,8 +3186,8 @@ var RES;
                 if (index != -1) {
                     this.loadedGroups.splice(index, 1);
                 }
-                var length_6 = group.length;
-                for (var i = 0; i < length_6; i++) {
+                var length = group.length;
+                for (var i = 0; i < length; i++) {
                     var item = group[i];
                     if (!force && this.isResInLoadedGroup(item.name)) {
                     }
@@ -3210,13 +3208,13 @@ var RES;
                         return false;
                     }
                     delete this._loadedUrlTypes[name];
-                    var analyzer_1 = this.$getAnalyzerByType(type);
-                    analyzer_1.destroyRes(name);
+                    var analyzer = this.$getAnalyzerByType(type);
+                    analyzer.destroyRes(name);
                     return true;
                 }
-                var item = this.resConfig.getRawResourceItem(name);
+                item = this.resConfig.getRawResourceItem(name);
                 item.loaded = false;
-                var analyzer = this.$getAnalyzerByType(type);
+                analyzer = this.$getAnalyzerByType(type);
                 var result = analyzer.destroyRes(name);
                 this.removeLoadedGroupsByItemName(item.name);
                 return result;
@@ -3227,8 +3225,8 @@ var RES;
             var loadedGroupLength = loadedGroups.length;
             for (var i = 0; i < loadedGroupLength; i++) {
                 var group = this.resConfig.getRawGroupByName(loadedGroups[i]);
-                var length_7 = group.length;
-                for (var j = 0; j < length_7; j++) {
+                var length = group.length;
+                for (var j = 0; j < length; j++) {
                     var item = group[j];
                     if (item.name == name) {
                         loadedGroups.splice(i, 1);
@@ -3244,8 +3242,8 @@ var RES;
             var loadedGroupLength = loadedGroups.length;
             for (var i = 0; i < loadedGroupLength; i++) {
                 var group = this.resConfig.getRawGroupByName(loadedGroups[i]);
-                var length_8 = group.length;
-                for (var j = 0; j < length_8; j++) {
+                var length = group.length;
+                for (var j = 0; j < length; j++) {
                     var item = group[j];
                     if (item.name == name) {
                         return true;
@@ -3287,7 +3285,7 @@ var RES;
 })(RES || (RES = {}));
 ////////////////////////////////////////////////////////////////////////////////////////
 ////
-////  Copyright (c) 2014-present, Egret Technology.
+////  Copyright (c) 2014-2015, Egret Technology Inc.
 ////  All rights reserved.
 ////  Redistribution and use in source and binary forms, with or without
 ////  modification, are permitted provided that the following conditions are met:

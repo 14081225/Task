@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -642,7 +642,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -720,6 +720,10 @@ var egret;
              * @private
              */
             this._steps = null;
+            /**
+             * @private
+             */
+            this._actions = null;
             /**
              * @private
              */
@@ -871,11 +875,11 @@ var egret;
             Tween._lastTime = timeStamp;
             var tweens = Tween._tweens.concat();
             for (var i = tweens.length - 1; i >= 0; i--) {
-                var tween_1 = tweens[i];
-                if ((paused && !tween_1.ignoreGlobalPause) || tween_1.paused) {
+                var tween = tweens[i];
+                if ((paused && !tween.ignoreGlobalPause) || tween.paused) {
                     continue;
                 }
-                tween_1.$tick(tween_1._useTicks ? 1 : delta);
+                tween.tick(tween._useTicks ? 1 : delta);
             }
             return false;
         };
@@ -927,9 +931,9 @@ var egret;
         Tween.removeAllTweens = function () {
             var tweens = Tween._tweens;
             for (var i = 0, l = tweens.length; i < l; i++) {
-                var tween_2 = tweens[i];
-                tween_2.paused = true;
-                tween_2._target.tweenjs_count = 0;
+                var tween = tweens[i];
+                tween.paused = true;
+                tween._target.tweenjs_count = 0;
             }
             tweens.length = 0;
         };
@@ -955,6 +959,7 @@ var egret;
             this._curQueueProps = {};
             this._initQueueProps = {};
             this._steps = [];
+            this._actions = [];
             if (props && props.paused) {
                 this.paused = true;
             }
@@ -992,50 +997,41 @@ var egret;
             if (t == this._prevPos) {
                 return end;
             }
-            if (end) {
-                this.setPaused(true);
-            }
             var prevPos = this._prevPos;
             this.position = this._prevPos = t;
             this._prevPosition = value;
             if (this._target) {
-                if (this._steps.length > 0) {
+                if (end) {
+                    //结束
+                    this._updateTargetProps(null, 1);
+                }
+                else if (this._steps.length > 0) {
                     // 找到新的tween
-                    var l = this._steps.length;
-                    var stepIndex = -1;
-                    for (var i = 0; i < l; i++) {
-                        if (this._steps[i].type == "step") {
-                            stepIndex = i;
-                            if (this._steps[i].t <= t && this._steps[i].t + this._steps[i].d >= t) {
-                                break;
-                            }
+                    for (var i = 0, l = this._steps.length; i < l; i++) {
+                        if (this._steps[i].t > t) {
+                            break;
                         }
                     }
-                    for (var i = 0; i < l; i++) {
-                        if (this._steps[i].type == "action") {
-                            //执行actions
-                            if (actionsMode != 0) {
-                                if (this._useTicks) {
-                                    this._runAction(this._steps[i], t, t);
-                                }
-                                else if (actionsMode == 1 && t < prevPos) {
-                                    if (prevPos != this.duration) {
-                                        this._runAction(this._steps[i], prevPos, this.duration);
-                                    }
-                                    this._runAction(this._steps[i], 0, t, true);
-                                }
-                                else {
-                                    this._runAction(this._steps[i], prevPos, t);
-                                }
-                            }
-                        }
-                        else if (this._steps[i].type == "step") {
-                            if (stepIndex == i) {
-                                var step = this._steps[stepIndex];
-                                this._updateTargetProps(step, Math.min((this._stepPosition = t - step.t) / step.d, 1));
-                            }
-                        }
+                    var step = this._steps[i - 1];
+                    this._updateTargetProps(step, (this._stepPosition = t - step.t) / step.d);
+                }
+            }
+            if (end) {
+                this.setPaused(true);
+            }
+            //执行actions
+            if (actionsMode != 0 && this._actions.length > 0) {
+                if (this._useTicks) {
+                    this._runActions(t, t);
+                }
+                else if (actionsMode == 1 && t < prevPos) {
+                    if (prevPos != this.duration) {
+                        this._runActions(prevPos, this.duration);
                     }
+                    this._runActions(0, t, true);
+                }
+                else {
+                    this._runActions(prevPos, t);
                 }
             }
             this.dispatchEventWith("change");
@@ -1048,18 +1044,26 @@ var egret;
          * @param endPos
          * @param includeStart
          */
-        p._runAction = function (action, startPos, endPos, includeStart) {
+        p._runActions = function (startPos, endPos, includeStart) {
             if (includeStart === void 0) { includeStart = false; }
             var sPos = startPos;
             var ePos = endPos;
+            var i = -1;
+            var j = this._actions.length;
+            var k = 1;
             if (startPos > endPos) {
                 //把所有的倒置
                 sPos = endPos;
                 ePos = startPos;
+                i = j;
+                j = k = -1;
             }
-            var pos = action.t;
-            if (pos == ePos || (pos > sPos && pos < ePos) || (includeStart && pos == startPos)) {
-                action.f.apply(action.o, action.p);
+            while ((i += k) != j) {
+                var action = this._actions[i];
+                var pos = action.t;
+                if (pos == ePos || (pos > sPos && pos < ePos) || (includeStart && pos == startPos)) {
+                    action.f.apply(action.o, action.p);
+                }
             }
         };
         /**
@@ -1159,7 +1163,6 @@ var egret;
          */
         p._addStep = function (o) {
             if (o.d > 0) {
-                o.type = "step";
                 this._steps.push(o);
                 o.t = this.duration;
                 this.duration += o.d;
@@ -1214,8 +1217,7 @@ var egret;
          */
         p._addAction = function (o) {
             o.t = this.duration;
-            o.type = "action";
-            this._steps.push(o);
+            this._actions.push(o);
             return this;
         };
         /**
@@ -1279,16 +1281,14 @@ var egret;
             if (isNaN(duration) || duration < 0) {
                 duration = 0;
             }
-            this._addStep({ d: duration || 0, p0: this._cloneProps(this._curQueueProps), e: ease, p1: this._cloneProps(this._appendQueueProps(props)) });
-            //加入一步set，防止游戏极其卡顿时候，to后面的call取到的属性值不对
-            return this.set(props);
+            return this._addStep({ d: duration || 0, p0: this._cloneProps(this._curQueueProps), e: ease, p1: this._cloneProps(this._appendQueueProps(props)) });
         };
         /**
          * @language en_US
          * Execute callback function
          * @param callback {Function} Callback method
          * @param thisObj {any} this action scope of the callback method
-         * @param params {any[]} Parameter of the callback method
+         * @param params {Array<any>} Parameter of the callback method
          * @returns {egret.Tween} Tween object itself
          * @version Egret 2.4
          * @platform Web,Native
@@ -1305,7 +1305,7 @@ var egret;
          * 执行回调函数
          * @param callback {Function} 回调方法
          * @param thisObj {any} 回调方法this作用域
-         * @param params {any[]} 回调方法参数
+         * @param params {Array<any>} 回调方法参数
          * @returns {egret.Tween} Tween对象本身
          * @version Egret 2.4
          * @platform Web,Native
@@ -1395,7 +1395,7 @@ var egret;
          * @version Egret 2.4
          * @platform Web,Native
          */
-        p.$tick = function (delta) {
+        p.tick = function (delta) {
             if (this.paused) {
                 return;
             }
@@ -1440,577 +1440,4 @@ var egret;
     }(egret.EventDispatcher));
     egret.Tween = Tween;
     egret.registerClass(Tween,'egret.Tween');
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var tween;
-    (function (tween) {
-        /**
-         * @language en_US
-         * Abstract class, Indicate the base action.
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 抽象类，表示一个基本动作
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        var BasePath = (function (_super) {
-            __extends(BasePath, _super);
-            function BasePath() {
-                _super.apply(this, arguments);
-                /**
-                 * @language en_US
-                 * the name of this action.
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 动作的名称
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.name = "";
-            }
-            var d = __define,c=BasePath,p=c.prototype;
-            return BasePath;
-        }(egret.EventDispatcher));
-        tween.BasePath = BasePath;
-        egret.registerClass(BasePath,'egret.tween.BasePath');
-        /**
-         * @language en_US
-         * Indicate the to action. See <code>Tween.to</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 表示一个to动作，参见<code>Tween.to</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        var To = (function (_super) {
-            __extends(To, _super);
-            function To() {
-                _super.apply(this, arguments);
-                /**
-                 * @language en_US
-                 * Property set of an object
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 对象的属性集合
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.props = undefined;
-                /**
-                 * @language en_US
-                 * Duration
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 持续时间
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.duration = 500;
-                /**
-                 * @language en_US
-                 * Easing algorithm
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 缓动算法
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.ease = undefined;
-            }
-            var d = __define,c=To,p=c.prototype;
-            return To;
-        }(BasePath));
-        tween.To = To;
-        egret.registerClass(To,'egret.tween.To');
-        /**
-         * @language en_US
-         * Indicate the wait action. See <code>Tween.wait</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 表示一个wait动作，参见<code>Tween.wait</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        var Wait = (function (_super) {
-            __extends(Wait, _super);
-            function Wait() {
-                _super.apply(this, arguments);
-                /**
-                 * @language en_US
-                 * Duration
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 持续时间
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.duration = 500;
-                /**
-                 * @language en_US
-                 * Whether properties are updated during the waiting time
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 等待期间属性是否会更新
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.passive = undefined;
-            }
-            var d = __define,c=Wait,p=c.prototype;
-            return Wait;
-        }(BasePath));
-        tween.Wait = Wait;
-        egret.registerClass(Wait,'egret.tween.Wait');
-        /**
-         * @language en_US
-         * Indicate the set action. See <code>Tween.set</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 表示一个set动作，参见<code>Tween.set</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        var Set = (function (_super) {
-            __extends(Set, _super);
-            function Set() {
-                _super.apply(this, arguments);
-                /**
-                 * @language en_US
-                 * Property set of an object
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 对象的属性集合
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.props = undefined;
-            }
-            var d = __define,c=Set,p=c.prototype;
-            return Set;
-        }(BasePath));
-        tween.Set = Set;
-        egret.registerClass(Set,'egret.tween.Set');
-        /**
-         * @language en_US
-         * Indicate the tick action. See <code>Tween.tick</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * 表示一个tick动作，参见<code>Tween.tick</code>
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        var Tick = (function (_super) {
-            __extends(Tick, _super);
-            function Tick() {
-                _super.apply(this, arguments);
-                /**
-                 * @language en_US
-                 * Delta time
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * 增加的时间
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                this.delta = 0;
-            }
-            var d = __define,c=Tick,p=c.prototype;
-            return Tick;
-        }(BasePath));
-        tween.Tick = Tick;
-        egret.registerClass(Tick,'egret.tween.Tick');
-        function convertEase(ease) {
-            if (typeof ease === 'function') {
-                return ease;
-            }
-            else {
-                var func = egret.Ease[ease];
-                if (typeof func === 'function') {
-                    return func;
-                }
-            }
-            return null;
-        }
-        /**
-         * @language en_US
-         * TweenItem is a wrapper for Tween, which can set the behavior of Tween by setting attributes and adding Path.
-         *
-         * @event pathComplete Dispatched when some Path has complete.
-         * @event complete Dispatched when all Paths has complete.
-         *
-         * @defaultProperty props
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * @language zh_CN
-         * TweenItem是对Tween的包装器，能通过设置属性和添加Path的方式设置Tween的行为。
-         * 通常用于使用在EXML中定义组件的动画。
-         *
-         * @event pathComplete 当某个Path执行完毕时会派发此事件。
-         * @event complete 当所有Path执行完毕时会派发此事件。
-         *
-         * @defaultProperty props
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         */
-        /**
-         * Use in exml:
-         * ```
-         * 	<tween:TweenItem target="{this.button}">
-         * 		<tween:props>
-         * 			<e:Object loop="{true}"/>
-         * 		</tween:props>
-         * 		<tween:paths>
-         * 			<e:Array>
-         * 				<tween:To duration="500">
-         * 					<tween:props>
-         * 						<e:Object x="{100}" y="{200}" />
-         * 					</tween:props>
-         * 				</tween:To>
-         * 				<tween:Wait duration="1000" />
-         * 				<tween:To duration="1000">
-         * 					<tween:props>
-         * 						<e:Object x="{200}" y="{100}" />
-         * 					</tween:props>
-         * 				</tween:To>
-         * 			</e:Array>
-         * 		</tween:paths>
-         * 	</tween:TweenItem>
-         * ```
-         */
-        var TweenItem = (function (_super) {
-            __extends(TweenItem, _super);
-            function TweenItem() {
-                _super.call(this);
-            }
-            var d = __define,c=TweenItem,p=c.prototype;
-            d(p, "props"
-                /**
-                 * @language en_US
-                 * The Tween's props.
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * Tween的props参数。
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this._props;
-                }
-                ,function (value) {
-                    this._props = value;
-                }
-            );
-            d(p, "target"
-                /**
-                 * @language en_US
-                 * The Tween's target.
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * Tween的target参数。
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this._target;
-                }
-                ,function (value) {
-                    this._target = value;
-                }
-            );
-            d(p, "paths"
-                /**
-                 * @language en_US
-                 * The Actions in Tween.
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * TweenItem中添加的行为。
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this._paths;
-                }
-                ,function (value) {
-                    this._paths = value || [];
-                }
-            );
-            /**
-             * @language en_US
-             * Play the Tween
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 播放Tween
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            p.play = function () {
-                if (!this.tween) {
-                    this.createTween();
-                }
-                else {
-                    this.tween.setPaused(false);
-                }
-            };
-            /**
-             * @language en_US
-             * Pause the Tween
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 暂停Tween
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            p.pause = function () {
-                if (this.tween) {
-                    this.tween.setPaused(true);
-                }
-            };
-            p.createTween = function () {
-                this.tween = egret.Tween.get(this._target, this._props);
-                if (this._paths) {
-                    this.applyPaths();
-                }
-            };
-            p.applyPaths = function () {
-                for (var i = 0; i < this._paths.length; i++) {
-                    var path = this._paths[i];
-                    this.applyPath(path);
-                }
-            };
-            p.applyPath = function (path) {
-                var _this = this;
-                if (path instanceof To) {
-                    this.tween.to(path.props, path.duration, convertEase(path.ease));
-                }
-                else if (path instanceof Wait) {
-                    this.tween.wait(path.duration, path.passive);
-                }
-                else if (path instanceof Set) {
-                    this.tween.set(path.props);
-                }
-                else if (path instanceof Tick) {
-                    this.tween.$tick(path.delta);
-                }
-                this.tween.call(function () { return _this.pathComplete(path); });
-            };
-            p.pathComplete = function (path) {
-                path.dispatchEventWith('complete');
-                this.dispatchEventWith('pathComplete', false, path);
-                var index = this._paths.indexOf(path);
-                if (index >= 0 && index === this._paths.length - 1) {
-                    this.dispatchEventWith('complete');
-                }
-            };
-            return TweenItem;
-        }(egret.EventDispatcher));
-        tween.TweenItem = TweenItem;
-        egret.registerClass(TweenItem,'egret.tween.TweenItem');
-        registerProperty(TweenItem, 'paths', 'Array', true);
-        /**
-         * @language en_US
-         * TweenGroup is a collection of TweenItem that can be played in parallel with each Item
-         *
-         * @event itemComplete Dispatched when some TweenItem has complete.
-         * @event complete Dispatched when all TweenItems has complete.
-         *
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         * @includeExample extension/tween/TweenWrapper.ts
-         */
-        /**
-         * @language zh_CN
-         * TweenGroup是TweenItem的集合，可以并行播放每一个Item
-         * @version Egret 3.1.8
-         * @platform Web,Native
-         * @includeExample extension/tween/TweenWrapper.ts
-         */
-        var TweenGroup = (function (_super) {
-            __extends(TweenGroup, _super);
-            function TweenGroup() {
-                _super.call(this);
-                this.completeCount = 0;
-            }
-            var d = __define,c=TweenGroup,p=c.prototype;
-            d(p, "items"
-                /**
-                 * @language en_US
-                 * The Array that TweenItems in TweenGroup.
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                /**
-                 * @language zh_CN
-                 * TweenGroup要控制的TweenItem集合。
-                 * @version Egret 3.1.8
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this._items;
-                }
-                ,function (value) {
-                    this.completeCount = 0;
-                    this.registerEvent(false);
-                    this._items = value;
-                    this.registerEvent(true);
-                }
-            );
-            p.registerEvent = function (add) {
-                var _this = this;
-                this._items && this._items.forEach(function (item) {
-                    if (add) {
-                        item.addEventListener('complete', _this.itemComplete, _this);
-                    }
-                    else {
-                        item.removeEventListener('complete', _this.itemComplete, _this);
-                    }
-                });
-            };
-            /**
-             * @language en_US
-             * Play the all TweenItems
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 播放所有的TweenItem
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            p.play = function () {
-                if (this._items) {
-                    for (var i = 0; i < this._items.length; i++) {
-                        var item = this._items[i];
-                        item.play();
-                    }
-                }
-            };
-            /**
-             * @language en_US
-             * Pause the all TweenItems
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            /**
-             * @language zh_CN
-             * 暂停播放所有的TweenItem
-             * @version Egret 3.1.8
-             * @platform Web,Native
-             */
-            p.pause = function () {
-                if (this._items) {
-                    for (var i = 0; i < this._items.length; i++) {
-                        var item = this._items[i];
-                        item.pause();
-                    }
-                }
-            };
-            p.itemComplete = function (e) {
-                var item = e.currentTarget;
-                this.completeCount++;
-                this.dispatchEventWith('itemComplete', false, item);
-                if (this.completeCount === this.items.length) {
-                    this.dispatchEventWith('complete');
-                    this.completeCount = 0;
-                }
-            };
-            return TweenGroup;
-        }(egret.EventDispatcher));
-        tween.TweenGroup = TweenGroup;
-        egret.registerClass(TweenGroup,'egret.tween.TweenGroup');
-        registerProperty(TweenGroup, 'items', 'Array', true);
-        function registerProperty(classDefinition, property, type, asDefault) {
-            var prototype = classDefinition.prototype;
-            prototype.__meta__ = prototype.__meta__ || {};
-            prototype.__meta__[property] = type;
-            if (asDefault) {
-                prototype.__defaultProperty__ = property;
-            }
-        }
-    })(tween = egret.tween || (egret.tween = {}));
 })(egret || (egret = {}));

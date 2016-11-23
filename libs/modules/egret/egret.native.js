@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -39,29 +39,7 @@ var egret;
          * @param italic 是否斜体
          */
         function measureText(text, fontFamily, fontSize, bold, italic) {
-            var font;
-            var arr;
-            if (fontFamily.indexOf(", ") != -1) {
-                arr = fontFamily.split(", ");
-            }
-            else if (fontFamily.indexOf(",") != -1) {
-                arr = fontFamily.split(",");
-                var length_1 = arr.length;
-                for (var i = 0; i < length_1; i++) {
-                    var fontFamily_1 = arr[i];
-                    //暂时先不考虑带有引号的情况
-                    if (egret.fontMapping[fontFamily_1]) {
-                        font = egret.fontMapping[fontFamily_1];
-                        break;
-                    }
-                }
-            }
-            else {
-                font = egret.fontMapping[fontFamily];
-            }
-            if (!font) {
-                font = "/system/fonts/DroidSansFallback.ttf";
-            }
+            var font = egret.TextField.default_fontFamily;
             egret_native.Label.createLabel(font, fontSize, "", 0);
             return egret_native.Label.getTextSize(text)[0];
         }
@@ -70,7 +48,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -123,9 +101,8 @@ var egret;
                 this.$lineWidth = 0;
                 this.$strokeStyle = "#000000";
                 this.$fillStyle = "#000000";
-                this.$font = "normal normal 10px sans-serif";
+                this.$font = "10px sans-serif";
                 this.$fontSize = 10;
-                this.$fontFamily = "";
                 this.clipRectArray = null;
                 this.$saveList = [];
                 this.$clipRect = new egret.Rectangle();
@@ -134,803 +111,6 @@ var egret;
                 this.$hasStrokeText = false;
             }
             var d = __define,c=NativeRenderTextureRenderContext,p=c.prototype;
-            d(p, "globalCompositeOperation"
-                /**
-                 * @private
-                 * 设置新图像如何绘制到已有的图像上的规制
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$globalCompositeOperation;
-                }
-                ,function (value) {
-                    this.$globalCompositeOperation = value;
-                    var arr = blendModesForGL[value];
-                    if (arr) {
-                        this.checkSurface();
-                        native.$cmdManager.setContext(this.$nativeContext);
-                        native.$cmdManager.setBlendArg(arr[0], arr[1]);
-                    }
-                }
-            );
-            d(p, "globalAlpha"
-                /**
-                 * @private
-                 * 设置接下来绘图填充的整体透明度
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$globalAlpha;
-                }
-                ,function (value) {
-                    this.$globalAlpha = value;
-                    this.checkSurface();
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.setGlobalAlpha(value);
-                }
-            );
-            d(p, "lineWidth"
-                /**
-                 * @private
-                 * 设置线条粗细，以像素为单位。设置为0，负数，Infinity 或 NaN 将会被忽略。
-                 * @default 1
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$lineWidth;
-                }
-                ,function (value) {
-                    //console.log("set lineWidth" + value);
-                    this.$lineWidth = value;
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.setLineWidth(value);
-                    this.checkSurface();
-                    native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                    native.$cmdManager.setLineWidth(value);
-                }
-            );
-            d(p, "strokeStyle"
-                /**
-                 * @private
-                 * 设置要在图形边线填充的颜色或样式
-                 * @default "#000000"
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$strokeStyle;
-                }
-                ,function (value) {
-                    this.$strokeStyle = value;
-                    if (value != null) {
-                        if (value.indexOf("rgba") != -1) {
-                            value = this.$parseRGBA(value);
-                        }
-                        else if (value.indexOf("rgb") != -1) {
-                            value = this.$parseRGB(value);
-                        }
-                        native.$cmdManager.setContext(egret_native.Label);
-                        native.$cmdManager.setStrokeColor(parseInt(value.replace("#", "0x")));
-                    }
-                    this.checkSurface();
-                    native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                    var s1 = native.$cmdManager.pushString(value);
-                    native.$cmdManager.setStrokeStyle(s1);
-                }
-            );
-            d(p, "fillStyle"
-                /**
-                 * @private
-                 * 设置要在图形内部填充的颜色或样式
-                 * @default "#000000"
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$fillStyle;
-                }
-                ,function (value) {
-                    this.$fillStyle = value;
-                    if (value != null) {
-                        if (value.indexOf("rgba") != -1) {
-                            value = this.$parseRGBA(value);
-                        }
-                        else if (value.indexOf("rgb") != -1) {
-                            value = this.$parseRGB(value);
-                        }
-                        native.$cmdManager.setContext(egret_native.Label);
-                        native.$cmdManager.setTextColor(parseInt(value.replace("#", "0x")));
-                    }
-                    this.checkSurface();
-                    native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                    var s1 = native.$cmdManager.pushString(value);
-                    native.$cmdManager.setFillStyle(s1);
-                }
-            );
-            p.$fillColorStr = function (s) {
-                if (s.length < 2) {
-                    s = "0" + s;
-                }
-                return s;
-            };
-            p.$parseRGBA = function (str) {
-                var index = str.indexOf("(");
-                str = str.slice(index + 1, str.length - 1);
-                var arr = str.split(",");
-                var a = parseInt((parseFloat(arr[3]) * 255)).toString(16);
-                var r = parseInt(arr[0]).toString(16);
-                var g = parseInt(arr[1]).toString(16);
-                var b = parseInt(arr[2]).toString(16);
-                str = "#" + this.$fillColorStr(a) + this.$fillColorStr(r) + this.$fillColorStr(g) + this.$fillColorStr(b);
-                return str;
-            };
-            p.$parseRGB = function (str) {
-                var index = str.indexOf("(");
-                str = str.slice(index + 1, str.length - 1);
-                var arr = str.split(",");
-                var r = parseInt(arr[0]).toString(16);
-                var g = parseInt(arr[1]).toString(16);
-                var b = parseInt(arr[2]).toString(16);
-                str = "#" + this.$fillColorStr(r) + this.$fillColorStr(g) + this.$fillColorStr(b);
-                return str;
-            };
-            d(p, "font"
-                /**
-                 * @private
-                 * 当前的字体样式
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$font;
-                }
-                ,function (value) {
-                    this.$font = value;
-                    var arr = value.split(" ");
-                    var sizeTxt = arr[2];
-                    if (sizeTxt.indexOf("px") != -1) {
-                        this.$fontSize = parseInt(sizeTxt.replace("px", ""));
-                    }
-                    if (egret.useFontMapping) {
-                        var fontFamilyText = void 0;
-                        if (arr.length == 4) {
-                            fontFamilyText = arr[3];
-                        }
-                        else {
-                            fontFamilyText = arr.slice(3).join(" ");
-                        }
-                        if (fontFamilyText.indexOf(", ") != -1) {
-                            arr = fontFamilyText.split(", ");
-                        }
-                        else if (fontFamilyText.indexOf(",") != -1) {
-                            arr = fontFamilyText.split(",");
-                            var length_2 = arr.length;
-                            for (var i = 0; i < length_2; i++) {
-                                var fontFamily = arr[i];
-                                //暂时先不考虑带有引号的情况
-                                if (egret.fontMapping[fontFamily]) {
-                                    this.$fontFamily = egret.fontMapping[fontFamily];
-                                    return;
-                                }
-                            }
-                        }
-                        else {
-                            this.$fontFamily = egret.fontMapping[fontFamilyText];
-                        }
-                        if (!this.$fontFamily) {
-                            this.$fontFamily = "/system/fonts/DroidSansFallback.ttf";
-                        }
-                    }
-                    else {
-                        //兼容旧版本直接将 default_fontFamily 设置为字体路径的情况
-                        this.$fontFamily = egret.TextField.default_fontFamily;
-                    }
-                }
-            );
-            /**
-             * @private
-             * 绘制一段圆弧路径。圆弧路径的圆心在 (x, y) 位置，半径为 r ，根据anticlockwise （默认为顺时针）指定的方向从 startAngle 开始绘制，到 endAngle 结束。
-             * @param x 圆弧中心（圆心）的 x 轴坐标。
-             * @param y 圆弧中心（圆心）的 y 轴坐标。
-             * @param radius 圆弧的半径。
-             * @param startAngle 圆弧的起始点， x轴方向开始计算，单位以弧度表示。
-             * @param endAngle 圆弧的重点， 单位以弧度表示。
-             * @param anticlockwise 如果为 true，逆时针绘制圆弧，反之，顺时针绘制。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.arc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.arc(x, y, radius, startAngle, endAngle, anticlockwise ? 1 : 0);
-                // this.$nativeGraphicsContext.arc(x, y, radius, startAngle, endAngle, anticlockwise);
-            };
-            /**
-             * @private
-             * 绘制一段二次贝塞尔曲线路径。它需要2个点。 第一个点是控制点，第二个点是终点。 起始点是当前路径最新的点，当创建二次贝赛尔曲线之前，可以使用 moveTo() 方法进行改变。
-             * @param cpx 控制点的 x 轴坐标。
-             * @param cpy 控制点的 y 轴坐标。
-             * @param x 终点的 x 轴坐标。
-             * @param y 终点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.quadraticCurveTo = function (cpx, cpy, x, y) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.quadraticCurveTo(cpx, cpy, x, y);
-                // this.$nativeGraphicsContext.quadraticCurveTo(cpx, cpy, x, y);
-            };
-            /**
-             * @private
-             * 使用直线连接子路径的终点到x，y坐标。
-             * @param x 直线终点的 x 轴坐标。
-             * @param y 直线终点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.lineTo = function (x, y) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.lineTo(x, y);
-            };
-            /**
-             * @private
-             * 根据当前的填充样式，填充当前或已存在的路径的方法。采取非零环绕或者奇偶环绕规则。
-             * @param fillRule 一种算法，决定点是在路径内还是在路径外。允许的值：
-             * "nonzero": 非零环绕规则， 默认的规则。
-             * "evenodd": 奇偶环绕规则。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.fill = function (fillRule) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                var s1 = native.$cmdManager.pushString(fillRule);
-                native.$cmdManager.fill(s1);
-            };
-            /**
-             * @private
-             * 使笔点返回到当前子路径的起始点。它尝试从当前点到起始点绘制一条直线。如果图形已经是封闭的或者只有一个点，那么此方法不会做任何操作。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.closePath = function () {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.closePath();
-            };
-            /**
-             * @private
-             * 创建一段矩形路径，矩形的起点位置是 (x, y) ，尺寸为 width 和 height。矩形的4个点通过直线连接，子路径做为闭合的标记，所以你可以填充或者描边矩形。
-             * @param x 矩形起点的 x 轴坐标。
-             * @param y 矩形起点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.rect = function (x, y, w, h) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.rect(x, y, w, h);
-                this.$clipRect.setTo(x, y, w, h);
-            };
-            /**
-             * @private
-             * 将一个新的子路径的起始点移动到(x，y)坐标
-             * @param x 点的 x 轴
-             * @param y 点的 y 轴
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.moveTo = function (x, y) {
-                this.checkSurface();
-                // this.$nativeGraphicsContext.moveTo(x, y);
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.moveTo(x, y);
-            };
-            /**
-             * @private
-             * 绘制一个填充矩形。矩形的起点在 (x, y) 位置，矩形的尺寸是 width 和 height ，fillStyle 属性决定矩形的样式。
-             * @param x 矩形起始点的 x 轴坐标。
-             * @param y 矩形起始点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.fillRect = function (x, y, w, h) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.fillRect(x, y, w, h);
-                // this.$nativeGraphicsContext.fillRect(x, y, w, h);
-            };
-            /**
-             * @private
-             * 绘制一段三次贝赛尔曲线路径。该方法需要三个点。 第一、第二个点是控制点，第三个点是结束点。起始点是当前路径的最后一个点，
-             * 绘制贝赛尔曲线前，可以通过调用 moveTo() 进行修改。
-             * @param cp1x 第一个控制点的 x 轴坐标。
-             * @param cp1y 第一个控制点的 y 轴坐标。
-             * @param cp2x 第二个控制点的 x 轴坐标。
-             * @param cp2y 第二个控制点的 y 轴坐标。
-             * @param x 结束点的 x 轴坐标。
-             * @param y 结束点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-                // this.$nativeGraphicsContext.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-            };
-            /**
-             * @private
-             * 根据当前的画线样式，绘制当前或已经存在的路径的方法。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.stroke = function () {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.stroke();
-                // this.$nativeGraphicsContext.stroke();
-            };
-            /**
-             * @private
-             * 使用当前的绘画样式，描绘一个起点在 (x, y) 、宽度为 w 、高度为 h 的矩形的方法。
-             * @param x 矩形起点的 x 轴坐标。
-             * @param y 矩形起点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.strokeRect = function (x, y, w, h) {
-                //console.log("strokeRect");
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.strokeRect(x, y, w, h);
-                // this.$nativeGraphicsContext.strokeRect(x, y, w, h);
-            };
-            /**
-             * @private
-             * 清空子路径列表开始一个新路径。 当你想创建一个新的路径时，调用此方法。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.beginPath = function () {
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeGraphicsContext);
-                native.$cmdManager.beginPath();
-            };
-            /**
-             * @private
-             * 根据控制点和半径绘制一段圆弧路径，使用直线连接前一个点。
-             * @param x1 第一个控制点的 x 轴坐标。
-             * @param y1 第一个控制点的 y 轴坐标。
-             * @param x2 第二个控制点的 x 轴坐标。
-             * @param y2 第二个控制点的 y 轴坐标。
-             * @param radius 圆弧的半径。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.arcTo = function (x1, y1, x2, y2, radius) {
-                this.checkSurface();
-                this.$nativeGraphicsContext.arcTo(x1, y1, x2, y2, radius);
-            };
-            /**
-             * @private
-             * 使用方法参数描述的矩阵多次叠加当前的变换矩阵。
-             * @param a 水平缩放。
-             * @param b 水平倾斜。
-             * @param c 垂直倾斜。
-             * @param d 垂直缩放。
-             * @param tx 水平移动。
-             * @param ty 垂直移动。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.transform = function (a, b, c, d, tx, ty) {
-                this.$matrix.append(a, b, c, d, tx, ty);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 通过在网格中移动 surface 和 surface 原点 x 水平方向、原点 y 垂直方向，添加平移变换
-             * @param x 水平移动。
-             * @param y 垂直移动。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.translate = function (x, y) {
-                this.$matrix.translate(x, y);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 根据 x 水平方向和 y 垂直方向，为 surface 单位添加缩放变换。
-             * @param x 水平方向的缩放因子。
-             * @param y 垂直方向的缩放因子。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.scale = function (x, y) {
-                this.$matrix.scale(x, y);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 在变换矩阵中增加旋转，角度变量表示一个顺时针旋转角度并且用弧度表示。
-             * @param angle 顺时针旋转的弧度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.rotate = function (angle) {
-                this.$matrix.rotate(angle);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 恢复到最近的绘制样式状态，此状态是通过 save() 保存到”状态栈“中最新的元素。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.restore = function () {
-                //console.log("restore");
-                if (this.$saveCount > 0) {
-                    if (this.$saveList.length) {
-                        var data = this.$saveList.pop();
-                        for (var key in data) {
-                            this[key] = data[key];
-                        }
-                        this.setTransformToNative();
-                    }
-                    var index = this.$clipList.indexOf(this.$saveCount);
-                    if (index != -1) {
-                        var length_3 = this.$clipList.length;
-                        this.$clipList.splice(index, length_3 - index);
-                        for (; index < length_3; index++) {
-                            this.checkSurface();
-                            native.$cmdManager.setContext(this.$nativeContext);
-                            native.$cmdManager.popClip();
-                        }
-                    }
-                    this.$saveCount--;
-                }
-            };
-            /**
-             * @private
-             * 使用栈保存当前的绘画样式状态，你可以使用 restore() 恢复任何改变。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.save = function () {
-                //console.log("save");
-                var transformMatrix = new egret.Matrix();
-                transformMatrix.copyFrom(this.$matrix);
-                this.$saveList.push({
-                    lineWidth: this.$lineWidth,
-                    globalCompositeOperation: this.$globalCompositeOperation,
-                    globalAlpha: this.$globalAlpha,
-                    strokeStyle: this.$strokeStyle,
-                    fillStyle: this.$fillStyle,
-                    font: this.$font,
-                    $matrix: transformMatrix
-                });
-                this.$saveCount++;
-            };
-            /**
-             * @private
-             * 从当前路径创建一个剪切路径。在 clip() 调用之后，绘制的所有信息只会出现在剪切路径内部。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.clip = function (fillRule) {
-                if (this.$clipRect.width > 0 && this.$clipRect.height > 0) {
-                    //console.log("push clip" + this.$clipRect.x + " " + this.$clipRect.y + " " + this.$clipRect.width + " " + this.$clipRect.height);
-                    this.checkSurface();
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.pushClip(this.$clipRect.x, this.$clipRect.y, this.$clipRect.width, this.$clipRect.height);
-                    this.$clipRect.setEmpty();
-                    this.$clipList.push(this.$saveCount);
-                }
-            };
-            /**
-             * @private
-             * 设置指定矩形区域内（以 点 (x, y) 为起点，范围是(width, height) ）所有像素变成透明，并擦除之前绘制的所有内容。
-             * @param x 矩形起点的 x 轴坐标。
-             * @param y 矩形起点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.clearRect = function (x, y, width, height) {
-                //console.log("clearScreen");
-                this.checkSurface();
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.clearScreen(0, 0, 0, 0);
-            };
-            /**
-             * @private
-             * 重新设置当前的变换为单位矩阵，并使用同样的变量调用 transform() 方法。
-             * @param a 水平缩放。
-             * @param b 水平倾斜。
-             * @param c 垂直倾斜。
-             * @param d 垂直缩放。
-             * @param tx 水平移动。
-             * @param ty 垂直移动。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.setTransform = function (a, b, c, d, tx, ty) {
-                this.$matrix.setTo(a, b, c, d, tx, ty);
-                this.setTransformToNative();
-            };
-            p.setTransformToNative = function () {
-                var m = this.$matrix;
-                //console.log("setTransformToNative::a=" + m.a + " b=" + m.b + " c=" + m.c + " d=" + m.d + " tx=" + m.tx + " ty=" + m.ty);
-                this.checkSurface();
-                // this.$nativeContext.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-            };
-            /**
-             * @private
-             * 创建一个沿参数坐标指定的直线的渐变。该方法返回一个线性的 GraphicsGradient 对象。
-             * @param x0 起点的 x 轴坐标。
-             * @param y0 起点的 y 轴坐标。
-             * @param x1 终点的 x 轴坐标。
-             * @param y1 终点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.createLinearGradient = function (x0, y0, x1, y1) {
-                this.checkSurface();
-                return this.$nativeGraphicsContext.createLinearGradient(x0, y0, x1, y1);
-            };
-            /**
-             * @private
-             * 根据参数确定的两个圆的坐标，创建一个放射性渐变。该方法返回一个放射性的 GraphicsGradient。
-             * @param x0 开始圆形的 x 轴坐标。
-             * @param y0 开始圆形的 y 轴坐标。
-             * @param r0 开始圆形的半径。
-             * @param x1 结束圆形的 x 轴坐标。
-             * @param y1 结束圆形的 y 轴坐标。
-             * @param r1 结束圆形的半径。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {
-                this.checkSurface();
-                return this.$nativeGraphicsContext.createRadialGradient(x0, y0, r0, x1, y1, r1);
-            };
-            /**
-             * @private
-             * 在(x,y)位置绘制（填充）文本。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.fillText = function (text, x, y, maxWidth) {
-                //console.log("drawText" + text);
-                native.$cmdManager.setContext(egret_native.Label);
-                var s1 = native.$cmdManager.pushString(this.$fontFamily);
-                var s2 = native.$cmdManager.pushString("");
-                native.$cmdManager.createLabel(s1, this.$fontSize, s2, this.$hasStrokeText ? this.$lineWidth : 0);
-                this.$hasStrokeText = false;
-                var s3 = native.$cmdManager.pushString(text);
-                native.$cmdManager.drawText(s3, x, y);
-            };
-            p.strokeText = function (text, x, y, maxWidth) {
-                this.$hasStrokeText = true;
-            };
-            /**
-             * @private
-             * 测量指定文本宽度，返回 TextMetrics 对象。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.measureText = function (text) {
-                native.$cmdManager.setContext(egret_native.Label);
-                var s1 = native.$cmdManager.pushString(this.$fontFamily);
-                var s2 = native.$cmdManager.pushString("");
-                native.$cmdManager.createLabel(s1, this.$fontSize, s2, this.$hasStrokeText ? this.$lineWidth : 0);
-                return { width: egret_native.Label.getTextSize(text)[0] };
-            };
-            /**
-             * @private
-             * 注意：如果要对绘制的图片进行缩放，出于性能优化考虑，系统不会主动去每次重置imageSmoothingEnabled属性，因此您在调用drawImage()方法前请务必
-             * 确保 imageSmoothingEnabled 已被重置为正常的值，否则有可能沿用上个显示对象绘制过程留下的值。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.drawImage = function (image, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight) {
-                var bitmapData;
-                var isNative;
-                if (image.$nativeRenderTexture) {
-                    bitmapData = image.$nativeRenderTexture;
-                    isNative = true;
-                }
-                else {
-                    bitmapData = image;
-                    isNative = false;
-                }
-                if (!bitmapData) {
-                    return;
-                }
-                if (arguments.length == 3) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = surfaceImageWidth = image.width;
-                    height = surfaceImageHeight = image.height;
-                }
-                else if (arguments.length == 5) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    surfaceImageWidth = width;
-                    surfaceImageHeight = height;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = image.width;
-                    height = image.height;
-                }
-                else {
-                    if (width == void 0) {
-                        width = image.width;
-                    }
-                    if (height == void 0) {
-                        height = image.height;
-                    }
-                    if (surfaceOffsetX == void 0) {
-                        surfaceOffsetX = 0;
-                    }
-                    if (surfaceOffsetY == void 0) {
-                        surfaceOffsetY = 0;
-                    }
-                    if (surfaceImageWidth == void 0) {
-                        surfaceImageWidth = width;
-                    }
-                    if (surfaceImageHeight == void 0) {
-                        surfaceImageHeight = height;
-                    }
-                }
-                //console.log("drawImage::" + offsetX + " " + offsetY + " " + width + " " + height + " " + surfaceOffsetX + " " + surfaceOffsetY + " " + surfaceImageWidth + " " + surfaceImageHeight);
-                this.checkSurface();
-                var imageAdress;
-                if (!isNative) {
-                    if (!bitmapData._native_tex_loc) {
-                        bitmapData._native_tex_loc = bitmapData.___native_texture__p;
-                    }
-                    imageAdress = bitmapData._native_tex_loc;
-                }
-                else {
-                    imageAdress = bitmapData.___native_texture__p;
-                }
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.drawImage(imageAdress, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight);
-            };
-            /**
-             * @private
-             * 基于指定的源图象(BitmapData)创建一个模板，通过repetition参数指定源图像在什么方向上进行重复，返回一个GraphicsPattern对象。
-             * @param bitmapData 做为重复图像源的 BitmapData 对象。
-             * @param repetition 指定如何重复图像。
-             * 可能的值有："repeat" (两个方向重复),"repeat-x" (仅水平方向重复),"repeat-y" (仅垂直方向重复),"no-repeat" (不重复).
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.createPattern = function (image, repetition) {
-                return null;
-            };
-            /**
-             * @private
-             * 返回一个 ImageData 对象，用来描述canvas区域隐含的像素数据，这个区域通过矩形表示，起始点为(sx, sy)、宽为sw、高为sh。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.getImageData = function (sx, sy, sw, sh) {
-                native.$cmdManager.flush();
-                var res;
-                if (native.$currentSurface == this.surface) {
-                    if (native.$currentSurface != null) {
-                        native.$currentSurface.end();
-                    }
-                }
-                res = this.surface.getImageData(sx, sy, sw, sh);
-                if (res.pixelData) {
-                    res.data = res.pixelData;
-                }
-                return res;
-            };
-            p.checkSurface = function () {
-                //todo 暂时先写这里
-                if (native.$currentSurface != this.surface) {
-                    if (native.$currentSurface != null) {
-                        native.$currentSurface.end();
-                    }
-                    if (this.surface) {
-                        this.surface.begin();
-                    }
-                }
-            };
-            return NativeRenderTextureRenderContext;
-        }(egret.HashObject));
-        native.NativeRenderTextureRenderContext = NativeRenderTextureRenderContext;
-        egret.registerClass(NativeRenderTextureRenderContext,'egret.native.NativeRenderTextureRenderContext');
-    })(native = egret.native || (egret.native = {}));
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var native;
-    (function (native) {
-        var blendModesForGL = {
-            "source-over": [1, 771],
-            "lighter": [770, 1],
-            "destination-out": [0, 771],
-            "destination-in": [0, 770]
-        };
-        /**
-         * @version Egret 2.4
-         * @platform Web,Native
-         * @private
-         */
-        var OldNativeRenderTextureRenderContext = (function (_super) {
-            __extends(OldNativeRenderTextureRenderContext, _super);
-            function OldNativeRenderTextureRenderContext() {
-                _super.apply(this, arguments);
-                this.$matrix = new egret.Matrix();
-                this.$nativeContext = egret_native.Graphics;
-                this.$nativeGraphicsContext = egret_native.rastergl;
-                this.$globalCompositeOperation = "source-over";
-                this.$globalAlpha = 1;
-                this.$lineWidth = 0;
-                this.$strokeStyle = "#000000";
-                this.$fillStyle = "#000000";
-                this.$font = "normal normal 10px sans-serif";
-                this.$fontSize = 10;
-                this.$fontFamily = "";
-                this.clipRectArray = null;
-                this.$saveList = [];
-                this.$clipRect = new egret.Rectangle();
-                this.$saveCount = 0;
-                this.$clipList = [];
-                this.$hasStrokeText = false;
-            }
-            var d = __define,c=OldNativeRenderTextureRenderContext,p=c.prototype;
             d(p, "globalCompositeOperation"
                 /**
                  * @private
@@ -1077,43 +257,14 @@ var egret;
                 ,function (value) {
                     this.$font = value;
                     var arr = value.split(" ");
-                    var sizeTxt = arr[2];
-                    if (sizeTxt.indexOf("px") != -1) {
-                        this.$fontSize = parseInt(sizeTxt.replace("px", ""));
-                    }
-                    if (egret.useFontMapping) {
-                        var fontFamilyText = void 0;
-                        if (arr.length == 4) {
-                            fontFamilyText = arr[3];
+                    var length = arr.length;
+                    for (var i = 0; i < length; i++) {
+                        var txt = arr[i];
+                        if (txt.indexOf("px") != -1) {
+                            this.$fontSize = parseInt(txt.replace("px", ""));
+                            //console.log("set font" + this.$lineWidth);
+                            return;
                         }
-                        else {
-                            fontFamilyText = arr.slice(3).join(" ");
-                        }
-                        if (fontFamilyText.indexOf(", ") != -1) {
-                            arr = fontFamilyText.split(", ");
-                        }
-                        else if (fontFamilyText.indexOf(",") != -1) {
-                            arr = fontFamilyText.split(",");
-                            var length_4 = arr.length;
-                            for (var i = 0; i < length_4; i++) {
-                                var fontFamily = arr[i];
-                                //暂时先不考虑带有引号的情况
-                                if (egret.fontMapping[fontFamily]) {
-                                    this.$fontFamily = egret.fontMapping[fontFamily];
-                                    return;
-                                }
-                            }
-                        }
-                        else {
-                            this.$fontFamily = egret.fontMapping[fontFamilyText];
-                        }
-                        if (!this.$fontFamily) {
-                            this.$fontFamily = "/system/fonts/DroidSansFallback.ttf";
-                        }
-                    }
-                    else {
-                        //兼容旧版本直接将 default_fontFamily 设置为字体路径的情况
-                        this.$fontFamily = egret.TextField.default_fontFamily;
                     }
                 }
             );
@@ -1359,9 +510,9 @@ var egret;
                     }
                     var index = this.$clipList.indexOf(this.$saveCount);
                     if (index != -1) {
-                        var length_5 = this.$clipList.length;
-                        this.$clipList.splice(index, length_5 - index);
-                        for (; index < length_5; index++) {
+                        var length = this.$clipList.length;
+                        this.$clipList.splice(index, length - index);
+                        for (; index < length; index++) {
                             this.checkSurface();
                             this.$nativeContext.popClip();
                         }
@@ -1480,7 +631,8 @@ var egret;
              */
             p.fillText = function (text, x, y, maxWidth) {
                 //console.log("drawText" + text);
-                egret_native.Label.createLabel(this.$fontFamily, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
+                var font = egret.TextField.default_fontFamily;
+                egret_native.Label.createLabel(font, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
                 this.$hasStrokeText = false;
                 egret_native.Label.drawText(text, x, y);
             };
@@ -1494,7 +646,8 @@ var egret;
              * @platform Web,Native
              */
             p.measureText = function (text) {
-                egret_native.Label.createLabel(this.$fontFamily, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
+                var font = egret.TextField.default_fontFamily;
+                egret_native.Label.createLabel(font, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
                 return { width: egret_native.Label.getTextSize(text)[0] };
             };
             /**
@@ -1506,14 +659,11 @@ var egret;
              */
             p.drawImage = function (image, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight) {
                 var bitmapData;
-                var isNative;
                 if (image.$nativeRenderTexture) {
                     bitmapData = image.$nativeRenderTexture;
-                    isNative = true;
                 }
                 else {
                     bitmapData = image;
-                    isNative = false;
                 }
                 if (!bitmapData) {
                     return;
@@ -1602,15 +752,15 @@ var egret;
                     }
                 }
             };
-            return OldNativeRenderTextureRenderContext;
+            return NativeRenderTextureRenderContext;
         }(egret.HashObject));
-        native.OldNativeRenderTextureRenderContext = OldNativeRenderTextureRenderContext;
-        egret.registerClass(OldNativeRenderTextureRenderContext,'egret.native.OldNativeRenderTextureRenderContext');
+        native.NativeRenderTextureRenderContext = NativeRenderTextureRenderContext;
+        egret.registerClass(NativeRenderTextureRenderContext,'egret.native.NativeRenderTextureRenderContext');
     })(native = egret.native || (egret.native = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1655,7 +805,7 @@ var egret;
                 this.$heightReadySet = false;
                 this.$isRoot = false;
                 this.$isDispose = false;
-                this.renderContext = native.$supportCmdBatch ? new native.NativeRenderTextureRenderContext() : new native.OldNativeRenderTextureRenderContext();
+                this.renderContext = new native.NativeRenderTextureRenderContext();
             }
             var d = __define,c=NativeRenderTexture,p=c.prototype;
             p.toDataURL = function (type) {
@@ -1774,7 +924,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -1925,12 +1075,10 @@ var egret;
                 this.context.restore();
             };
             /**
-             * 获取指定区域的像素
+             * 获取指定坐标的像素
              */
-            p.getPixels = function (x, y, width, height) {
-                if (width === void 0) { width = 1; }
-                if (height === void 0) { height = 1; }
-                return this.context.getImageData(x, y, width, height).data;
+            p.getPixel = function (x, y) {
+                return this.context.getImageData(x, y, 1, 1).data;
             };
             /**
              * 转换成base64字符串，如果图片（或者包含的图片）跨域，则返回null
@@ -1964,7 +1112,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -2016,9 +1164,8 @@ var egret;
                 this.$lineWidth = 0;
                 this.$strokeStyle = "#000000";
                 this.$fillStyle = "#000000";
-                this.$font = "normal normal 10px sans-serif";
+                this.$font = "10px sans-serif";
                 this.$fontSize = 10;
-                this.$fontFamily = "";
                 this.clipRectArray = null;
                 this.$saveList = [];
                 this.$clipRectArray = [];
@@ -2029,923 +1176,6 @@ var egret;
                 this.$hasStrokeText = false;
             }
             var d = __define,c=NativeCanvasRenderContext,p=c.prototype;
-            d(p, "globalCompositeOperation"
-                /**
-                 * @private
-                 * 设置新图像如何绘制到已有的图像上的规制
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$globalCompositeOperation;
-                }
-                ,function (value) {
-                    this.$globalCompositeOperation = value;
-                    var arr = blendModesForGL[value];
-                    if (arr) {
-                        native.$cmdManager.setContext(this.$nativeContext);
-                        native.$cmdManager.setBlendArg(arr[0], arr[1]);
-                    }
-                }
-            );
-            d(p, "globalAlpha"
-                /**
-                 * @private
-                 * 设置接下来绘图填充的整体透明度
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$globalAlpha;
-                }
-                ,function (value) {
-                    this.$globalAlpha = value;
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.setGlobalAlpha(value);
-                }
-            );
-            d(p, "lineWidth"
-                /**
-                 * @private
-                 * 设置线条粗细，以像素为单位。设置为0，负数，Infinity 或 NaN 将会被忽略。
-                 * @default 1
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$lineWidth;
-                }
-                ,function (value) {
-                    //console.log("set lineWidth" + value);
-                    this.$lineWidth = value;
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.setLineWidth(value);
-                }
-            );
-            d(p, "strokeStyle"
-                /**
-                 * @private
-                 * 设置要在图形边线填充的颜色或样式
-                 * @default "#000000"
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$strokeStyle;
-                }
-                ,function (value) {
-                    this.$strokeStyle = value;
-                    if (value != null) {
-                        if (value.indexOf("rgba") != -1) {
-                            value = this.$parseRGBA(value);
-                        }
-                        else if (value.indexOf("rgb") != -1) {
-                            value = this.$parseRGB(value);
-                        }
-                        native.$cmdManager.setContext(egret_native.Label);
-                        native.$cmdManager.setStrokeColor(parseInt(value.replace("#", "0x")));
-                    }
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    var s1 = native.$cmdManager.pushString(value);
-                    native.$cmdManager.setStrokeStyle(s1);
-                }
-            );
-            d(p, "fillStyle"
-                /**
-                 * @private
-                 * 设置要在图形内部填充的颜色或样式
-                 * @default "#000000"
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$fillStyle;
-                }
-                ,function (value) {
-                    this.$fillStyle = value;
-                    if (value != null) {
-                        if (value.indexOf("rgba") != -1) {
-                            value = this.$parseRGBA(value);
-                        }
-                        else if (value.indexOf("rgb") != -1) {
-                            value = this.$parseRGB(value);
-                        }
-                        native.$cmdManager.setContext(egret_native.Label);
-                        native.$cmdManager.setTextColor(parseInt(value.replace("#", "0x")));
-                    }
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    var s1 = native.$cmdManager.pushString(value);
-                    native.$cmdManager.setFillStyle(s1);
-                }
-            );
-            p.$fillColorStr = function (s) {
-                if (s.length < 2) {
-                    s = "0" + s;
-                }
-                return s;
-            };
-            p.$parseRGBA = function (str) {
-                var index = str.indexOf("(");
-                str = str.slice(index + 1, str.length - 1);
-                var arr = str.split(",");
-                var a = parseInt((parseFloat(arr[3]) * 255)).toString(16);
-                var r = parseInt(arr[0]).toString(16);
-                var g = parseInt(arr[1]).toString(16);
-                var b = parseInt(arr[2]).toString(16);
-                str = "#" + this.$fillColorStr(a) + this.$fillColorStr(r) + this.$fillColorStr(g) + this.$fillColorStr(b);
-                return str;
-            };
-            p.$parseRGB = function (str) {
-                var index = str.indexOf("(");
-                str = str.slice(index + 1, str.length - 1);
-                var arr = str.split(",");
-                var r = parseInt(arr[0]).toString(16);
-                var g = parseInt(arr[1]).toString(16);
-                var b = parseInt(arr[2]).toString(16);
-                str = "#" + this.$fillColorStr(r) + this.$fillColorStr(g) + this.$fillColorStr(b);
-                return str;
-            };
-            d(p, "font"
-                /**
-                 * @private
-                 * 当前的字体样式
-                 * @version Egret 2.4
-                 * @platform Web,Native
-                 */
-                ,function () {
-                    return this.$font;
-                }
-                ,function (value) {
-                    this.$font = value;
-                    var arr = value.split(" ");
-                    var sizeTxt = arr[2];
-                    if (sizeTxt.indexOf("px") != -1) {
-                        this.$fontSize = parseInt(sizeTxt.replace("px", ""));
-                    }
-                    if (egret.useFontMapping) {
-                        var fontFamilyText = void 0;
-                        if (arr.length == 4) {
-                            fontFamilyText = arr[3];
-                        }
-                        else {
-                            fontFamilyText = arr.slice(3).join(" ");
-                        }
-                        if (fontFamilyText.indexOf(", ") != -1) {
-                            arr = fontFamilyText.split(", ");
-                        }
-                        else if (fontFamilyText.indexOf(",") != -1) {
-                            arr = fontFamilyText.split(",");
-                            var length_6 = arr.length;
-                            for (var i = 0; i < length_6; i++) {
-                                var fontFamily = arr[i];
-                                //暂时先不考虑带有引号的情况
-                                if (egret.fontMapping[fontFamily]) {
-                                    this.$fontFamily = egret.fontMapping[fontFamily];
-                                    return;
-                                }
-                            }
-                        }
-                        else {
-                            this.$fontFamily = egret.fontMapping[fontFamilyText];
-                        }
-                        if (!this.$fontFamily) {
-                            this.$fontFamily = "/system/fonts/DroidSansFallback.ttf";
-                        }
-                    }
-                    else {
-                        //兼容旧版本直接将 default_fontFamily 设置为字体路径的情况
-                        this.$fontFamily = egret.TextField.default_fontFamily;
-                    }
-                }
-            );
-            /**
-             * @private
-             * 绘制一段圆弧路径。圆弧路径的圆心在 (x, y) 位置，半径为 r ，根据anticlockwise （默认为顺时针）指定的方向从 startAngle 开始绘制，到 endAngle 结束。
-             * @param x 圆弧中心（圆心）的 x 轴坐标。
-             * @param y 圆弧中心（圆心）的 y 轴坐标。
-             * @param radius 圆弧的半径。
-             * @param startAngle 圆弧的起始点， x轴方向开始计算，单位以弧度表示。
-             * @param endAngle 圆弧的重点， 单位以弧度表示。
-             * @param anticlockwise 如果为 true，逆时针绘制圆弧，反之，顺时针绘制。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.arc = function (x, y, radius, startAngle, endAngle, anticlockwise) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.arc(x, y, radius, startAngle, endAngle, anticlockwise ? 1 : 0);
-                // this.$nativeContext.arc(x, y, radius, startAngle, endAngle, anticlockwise);
-            };
-            /**
-             * @private
-             * 绘制一段二次贝塞尔曲线路径。它需要2个点。 第一个点是控制点，第二个点是终点。 起始点是当前路径最新的点，当创建二次贝赛尔曲线之前，可以使用 moveTo() 方法进行改变。
-             * @param cpx 控制点的 x 轴坐标。
-             * @param cpy 控制点的 y 轴坐标。
-             * @param x 终点的 x 轴坐标。
-             * @param y 终点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.quadraticCurveTo = function (cpx, cpy, x, y) {
-                //console.log("quadraticCurveTo " + cpx + " " + cpy + " " + x + " " + y);
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.quadraticCurveTo(cpx, cpy, x, y);
-                // this.$nativeContext.quadraticCurveTo(cpx, cpy, x, y);
-            };
-            /**
-             * @private
-             * 使用直线连接子路径的终点到x，y坐标。
-             * @param x 直线终点的 x 轴坐标。
-             * @param y 直线终点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.lineTo = function (x, y) {
-                //console.log("lineTo " + x + " " + y);
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.lineTo(x, y);
-            };
-            /**
-             * @private
-             * 根据当前的填充样式，填充当前或已存在的路径的方法。采取非零环绕或者奇偶环绕规则。
-             * @param fillRule 一种算法，决定点是在路径内还是在路径外。允许的值：
-             * "nonzero": 非零环绕规则， 默认的规则。
-             * "evenodd": 奇偶环绕规则。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.fill = function (fillRule) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                var s1 = native.$cmdManager.pushString(fillRule);
-                native.$cmdManager.fill(s1);
-            };
-            /**
-             * @private
-             * 使笔点返回到当前子路径的起始点。它尝试从当前点到起始点绘制一条直线。如果图形已经是封闭的或者只有一个点，那么此方法不会做任何操作。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.closePath = function () {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.closePath();
-                if (this.clipRectArray) {
-                    this.$clipRectArray = this.clipRectArray;
-                    this.clipRectArray = null;
-                }
-            };
-            /**
-             * @private
-             * 创建一段矩形路径，矩形的起点位置是 (x, y) ，尺寸为 width 和 height。矩形的4个点通过直线连接，子路径做为闭合的标记，所以你可以填充或者描边矩形。
-             * @param x 矩形起点的 x 轴坐标。
-             * @param y 矩形起点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.rect = function (x, y, w, h) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.rect(x, y, w, h);
-                this.$clipRectArray.push({ x: x, y: y, w: w, h: h });
-            };
-            /**
-             * @private
-             * 将一个新的子路径的起始点移动到(x，y)坐标
-             * @param x 点的 x 轴
-             * @param y 点的 y 轴
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.moveTo = function (x, y) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.moveTo(x, y);
-            };
-            /**
-             * @private
-             * 绘制一个填充矩形。矩形的起点在 (x, y) 位置，矩形的尺寸是 width 和 height ，fillStyle 属性决定矩形的样式。
-             * @param x 矩形起始点的 x 轴坐标。
-             * @param y 矩形起始点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.fillRect = function (x, y, w, h) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.fillRect(x, y, w, h);
-                // this.$nativeContext.fillRect(x, y, w, h);
-            };
-            /**
-             * @private
-             * 绘制一段三次贝赛尔曲线路径。该方法需要三个点。 第一、第二个点是控制点，第三个点是结束点。起始点是当前路径的最后一个点，
-             * 绘制贝赛尔曲线前，可以通过调用 moveTo() 进行修改。
-             * @param cp1x 第一个控制点的 x 轴坐标。
-             * @param cp1y 第一个控制点的 y 轴坐标。
-             * @param cp2x 第二个控制点的 x 轴坐标。
-             * @param cp2y 第二个控制点的 y 轴坐标。
-             * @param x 结束点的 x 轴坐标。
-             * @param y 结束点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-                // this.$nativeContext.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-            };
-            /**
-             * @private
-             * 根据当前的画线样式，绘制当前或已经存在的路径的方法。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.stroke = function () {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.stroke();
-                // this.$nativeContext.stroke();
-            };
-            /**
-             * @private
-             * 使用当前的绘画样式，描绘一个起点在 (x, y) 、宽度为 w 、高度为 h 的矩形的方法。
-             * @param x 矩形起点的 x 轴坐标。
-             * @param y 矩形起点的 y 轴坐标。
-             * @param w 矩形的宽度。
-             * @param h 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.strokeRect = function (x, y, w, h) {
-                //console.log("strokeRect");
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.strokeRect(x, y, w, h);
-                // this.$nativeContext.strokeRect(x, y, w, h);
-            };
-            /**
-             * @private
-             * 清空子路径列表开始一个新路径。 当你想创建一个新的路径时，调用此方法。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.beginPath = function () {
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.beginPath();
-                this.clipRectArray = this.$clipRectArray.concat();
-            };
-            /**
-             * @private
-             * 根据控制点和半径绘制一段圆弧路径，使用直线连接前一个点。
-             * @param x1 第一个控制点的 x 轴坐标。
-             * @param y1 第一个控制点的 y 轴坐标。
-             * @param x2 第二个控制点的 x 轴坐标。
-             * @param y2 第二个控制点的 y 轴坐标。
-             * @param radius 圆弧的半径。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.arcTo = function (x1, y1, x2, y2, radius) {
-                this.$nativeContext.arcTo(x1, y1, x2, y2, radius);
-            };
-            /**
-             * @private
-             * 使用方法参数描述的矩阵多次叠加当前的变换矩阵。
-             * @param a 水平缩放。
-             * @param b 水平倾斜。
-             * @param c 垂直倾斜。
-             * @param d 垂直缩放。
-             * @param tx 水平移动。
-             * @param ty 垂直移动。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.transform = function (a, b, c, d, tx, ty) {
-                this.$matrix.append(a, b, c, d, tx, ty);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 通过在网格中移动 surface 和 surface 原点 x 水平方向、原点 y 垂直方向，添加平移变换
-             * @param x 水平移动。
-             * @param y 垂直移动。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.translate = function (x, y) {
-                this.$matrix.translate(x, y);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 根据 x 水平方向和 y 垂直方向，为 surface 单位添加缩放变换。
-             * @param x 水平方向的缩放因子。
-             * @param y 垂直方向的缩放因子。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.scale = function (x, y) {
-                this.$matrix.scale(x, y);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 在变换矩阵中增加旋转，角度变量表示一个顺时针旋转角度并且用弧度表示。
-             * @param angle 顺时针旋转的弧度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.rotate = function (angle) {
-                this.$matrix.rotate(angle);
-                this.setTransformToNative();
-            };
-            /**
-             * @private
-             * 恢复到最近的绘制样式状态，此状态是通过 save() 保存到”状态栈“中最新的元素。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.restore = function () {
-                //console.log("restore");
-                if (this.$saveList.length) {
-                    var data = this.$saveList.pop();
-                    for (var key in data) {
-                        this[key] = data[key];
-                    }
-                    this.setTransformToNative();
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.restore();
-                    this.clipRectArray = null;
-                }
-            };
-            /**
-             * @private
-             * 使用栈保存当前的绘画样式状态，你可以使用 restore() 恢复任何改变。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.save = function () {
-                //console.log("save");
-                var transformMatrix = new egret.Matrix();
-                transformMatrix.copyFrom(this.$matrix);
-                this.$saveList.push({
-                    lineWidth: this.$lineWidth,
-                    globalCompositeOperation: this.$globalCompositeOperation,
-                    globalAlpha: this.$globalAlpha,
-                    strokeStyle: this.$strokeStyle,
-                    fillStyle: this.$fillStyle,
-                    font: this.$font,
-                    $matrix: transformMatrix,
-                    $clipRectArray: this.$clipRectArray.concat()
-                });
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.save();
-            };
-            /**
-             * @private
-             * 从当前路径创建一个剪切路径。在 clip() 调用之后，绘制的所有信息只会出现在剪切路径内部。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.clip = function (fillRule) {
-                if (this.$clipRectArray.length > 0) {
-                    var arr = [];
-                    for (var i = 0; i < this.$clipRectArray.length; i++) {
-                        var clipRect = this.$clipRectArray[i];
-                        arr.push(clipRect.x);
-                        arr.push(clipRect.y);
-                        arr.push(clipRect.w);
-                        arr.push(clipRect.h);
-                    }
-                    //console.log("pushRectStencils " + arr.toString());
-                    native.$cmdManager.setContext(this.$nativeContext);
-                    native.$cmdManager.pushRectStencils(arr);
-                    this.$clipRectArray.length = 0;
-                }
-            };
-            /**
-             * @private
-             * 设置指定矩形区域内（以 点 (x, y) 为起点，范围是(width, height) ）所有像素变成透明，并擦除之前绘制的所有内容。
-             * @param x 矩形起点的 x 轴坐标。
-             * @param y 矩形起点的 y 轴坐标。
-             * @param width 矩形的宽度。
-             * @param height 矩形的高度。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.clearRect = function (x, y, width, height) {
-                //console.log("clearRect x:" + x + " y:" +  y + " width:" + width + " height:" + height);
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.clearRect(x, y, width, height);
-            };
-            /**
-             * @private
-             * 重新设置当前的变换为单位矩阵，并使用同样的变量调用 transform() 方法。
-             * @param a 水平缩放。
-             * @param b 水平倾斜。
-             * @param c 垂直倾斜。
-             * @param d 垂直缩放。
-             * @param tx 水平移动。
-             * @param ty 垂直移动。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.setTransform = function (a, b, c, d, tx, ty) {
-                this.$matrix.setTo(a, b, c, d, tx, ty);
-                this.setTransformToNative();
-            };
-            p.setTransformToNative = function () {
-                var m = this.$matrix;
-                //console.log("setTransformToNative::a=" + m.a + " b=" + m.b + " c=" + m.c + " d=" + m.d + " tx=" + m.tx + " ty=" + m.ty);
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-            };
-            /**
-             * @private
-             * 保存矩阵，这里只能保存一次，嵌套无效
-             */
-            p.saveTransform = function () {
-                this.savedMatrix.copyFrom(this.$matrix);
-            };
-            /**
-             * @private
-             * 保存矩阵，这里只能保存一次，嵌套无效
-             */
-            p.restoreTransform = function () {
-                this.$matrix.copyFrom(this.savedMatrix);
-            };
-            /**
-             * @private
-             * 创建一个沿参数坐标指定的直线的渐变。该方法返回一个线性的 GraphicsGradient 对象。
-             * @param x0 起点的 x 轴坐标。
-             * @param y0 起点的 y 轴坐标。
-             * @param x1 终点的 x 轴坐标。
-             * @param y1 终点的 y 轴坐标。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.createLinearGradient = function (x0, y0, x1, y1) {
-                return this.$nativeContext.createLinearGradient(x0, y0, x1, y1);
-            };
-            /**
-             * @private
-             * 根据参数确定的两个圆的坐标，创建一个放射性渐变。该方法返回一个放射性的 GraphicsGradient。
-             * @param x0 开始圆形的 x 轴坐标。
-             * @param y0 开始圆形的 y 轴坐标。
-             * @param r0 开始圆形的半径。
-             * @param x1 结束圆形的 x 轴坐标。
-             * @param y1 结束圆形的 y 轴坐标。
-             * @param r1 结束圆形的半径。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {
-                return this.$nativeContext.createRadialGradient(x0, y0, r0, x1, y1, r1);
-            };
-            /**
-             * @private
-             * 在(x,y)位置绘制（填充）文本。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.fillText = function (text, x, y, maxWidth) {
-                //console.log("drawText" + text);
-                native.$cmdManager.setContext(this.$nativeContext);
-                var s1 = native.$cmdManager.pushString(this.$fontFamily);
-                var s2 = native.$cmdManager.pushString("");
-                native.$cmdManager.createLabel(s1, this.$fontSize, s2, this.$hasStrokeText ? this.$lineWidth : 0);
-                this.$hasStrokeText = false;
-                var s3 = native.$cmdManager.pushString(text);
-                native.$cmdManager.drawText(s3, x, y);
-            };
-            p.strokeText = function (text, x, y, maxWidth) {
-                this.$hasStrokeText = true;
-            };
-            /**
-             * @private
-             * 测量指定文本宽度，返回 TextMetrics 对象。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.measureText = function (text) {
-                native.$cmdManager.setContext(egret_native.Label);
-                var s1 = native.$cmdManager.pushString(this.$fontFamily);
-                var s2 = native.$cmdManager.pushString("");
-                native.$cmdManager.createLabel(s1, this.$fontSize, s2, this.$hasStrokeText ? this.$lineWidth : 0);
-                //同步更新
-                native.$cmdManager.flush();
-                return { width: egret_native.Label.getTextSize(text)[0] };
-            };
-            /**
-             * @private
-             * 注意：如果要对绘制的图片进行缩放，出于性能优化考虑，系统不会主动去每次重置imageSmoothingEnabled属性，因此您在调用drawImage()方法前请务必
-             * 确保 imageSmoothingEnabled 已被重置为正常的值，否则有可能沿用上个显示对象绘制过程留下的值。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.drawImage = function (image, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight) {
-                var bitmapData;
-                var isNative;
-                if (image.$nativeCanvas) {
-                    bitmapData = image.$nativeCanvas;
-                    isNative = true;
-                }
-                else {
-                    bitmapData = image;
-                    isNative = false;
-                }
-                if (!bitmapData) {
-                    return;
-                }
-                if (arguments.length == 3) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = surfaceImageWidth = image.width;
-                    height = surfaceImageHeight = image.height;
-                }
-                else if (arguments.length == 5) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    surfaceImageWidth = width;
-                    surfaceImageHeight = height;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = image.width;
-                    height = image.height;
-                }
-                else {
-                    if (width == void 0) {
-                        width = image.width;
-                    }
-                    if (height == void 0) {
-                        height = image.height;
-                    }
-                    if (surfaceOffsetX == void 0) {
-                        surfaceOffsetX = 0;
-                    }
-                    if (surfaceOffsetY == void 0) {
-                        surfaceOffsetY = 0;
-                    }
-                    if (surfaceImageWidth == void 0) {
-                        surfaceImageWidth = width;
-                    }
-                    if (surfaceImageHeight == void 0) {
-                        surfaceImageHeight = height;
-                    }
-                }
-                //console.log("drawImage::" + offsetX + " " + offsetY + " " + width + " " + height + " " + surfaceOffsetX + " " + surfaceOffsetY + " " + surfaceImageWidth + " " + surfaceImageHeight);
-                //console.log("drawImage::" + bitmapData);
-                var imageAdress;
-                if (!isNative) {
-                    if (!bitmapData._native_tex_loc) {
-                        bitmapData._native_tex_loc = bitmapData.___native_texture__p;
-                    }
-                    imageAdress = bitmapData._native_tex_loc;
-                }
-                else {
-                    imageAdress = bitmapData.___native_texture__p;
-                }
-                native.$cmdManager.setContext(this.$nativeContext);
-                native.$cmdManager.drawImage(imageAdress, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight);
-            };
-            /**
-             * @private
-             * draw mesh
-             */
-            p.drawMesh = function (image, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices) {
-                var bitmapData;
-                if (image.$nativeCanvas) {
-                    bitmapData = image.$nativeCanvas;
-                }
-                else {
-                    bitmapData = image;
-                }
-                if (!bitmapData) {
-                    return;
-                }
-                if (arguments.length == 3) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = surfaceImageWidth = image.width;
-                    height = surfaceImageHeight = image.height;
-                }
-                else if (arguments.length == 5) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    surfaceImageWidth = width;
-                    surfaceImageHeight = height;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = image.width;
-                    height = image.height;
-                }
-                else {
-                    if (!width) {
-                        width = image.width;
-                    }
-                    if (!height) {
-                        height = image.height;
-                    }
-                    if (!surfaceOffsetX) {
-                        surfaceOffsetX = 0;
-                    }
-                    if (!surfaceOffsetY) {
-                        surfaceOffsetY = 0;
-                    }
-                    if (!surfaceImageWidth) {
-                        surfaceImageWidth = width;
-                    }
-                    if (!surfaceImageHeight) {
-                        surfaceImageHeight = height;
-                    }
-                }
-                this.vertices = new Float32Array(meshVertices.length / 2 * 5);
-                this.indicesForMesh = new Uint32Array(meshIndices.length);
-                this.cacheArrays(this.$matrix, 1, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices);
-                // 打断批渲染
-                native.$cmdManager.flush();
-                this.$nativeContext.drawMesh(bitmapData, this.vertices, this.indicesForMesh, this.vertices.length, this.indicesForMesh.length);
-            };
-            p.cacheArrays = function (transform, alpha, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices) {
-                //计算出绘制矩阵，之后把矩阵还原回之前的
-                var locWorldTransform = transform;
-                var originalA = locWorldTransform.a;
-                var originalB = locWorldTransform.b;
-                var originalC = locWorldTransform.c;
-                var originalD = locWorldTransform.d;
-                var originalTx = locWorldTransform.tx;
-                var originalTy = locWorldTransform.ty;
-                if (destX != 0 || destY != 0) {
-                    locWorldTransform.append(1, 0, 0, 1, destX, destY);
-                }
-                if (sourceWidth / destWidth != 1 || sourceHeight / destHeight != 1) {
-                    locWorldTransform.append(destWidth / sourceWidth, 0, 0, destHeight / sourceHeight, 0, 0);
-                }
-                var a = locWorldTransform.a;
-                var b = locWorldTransform.b;
-                var c = locWorldTransform.c;
-                var d = locWorldTransform.d;
-                var tx = locWorldTransform.tx;
-                var ty = locWorldTransform.ty;
-                locWorldTransform.a = originalA;
-                locWorldTransform.b = originalB;
-                locWorldTransform.c = originalC;
-                locWorldTransform.d = originalD;
-                locWorldTransform.tx = originalTx;
-                locWorldTransform.ty = originalTy;
-                if (meshVertices) {
-                    // 计算索引位置与赋值
-                    var vertices = this.vertices;
-                    // 缓存顶点数组
-                    var i = 0, iD = 0, l = 0;
-                    var u = 0, v = 0, x = 0, y = 0;
-                    for (i = 0, l = meshUVs.length; i < l; i += 2) {
-                        iD = i * 5 / 2;
-                        x = meshVertices[i];
-                        y = meshVertices[i + 1];
-                        u = meshUVs[i];
-                        v = meshUVs[i + 1];
-                        // xy
-                        vertices[iD + 0] = a * x + c * y + tx;
-                        vertices[iD + 1] = b * x + d * y + ty;
-                        // uv
-                        vertices[iD + 2] = (sourceX + u * sourceWidth) / textureSourceWidth;
-                        vertices[iD + 3] = (sourceY + v * sourceHeight) / textureSourceHeight;
-                        // alpha
-                        vertices[iD + 4] = alpha;
-                    }
-                    for (i = 0; i < meshIndices.length; i++) {
-                        this.indicesForMesh[i] = meshIndices[i];
-                    }
-                }
-                else {
-                    console.log("meshVertices not exist");
-                }
-            };
-            /**
-             * @private
-             * 基于指定的源图象(BitmapData)创建一个模板，通过repetition参数指定源图像在什么方向上进行重复，返回一个GraphicsPattern对象。
-             * @param bitmapData 做为重复图像源的 BitmapData 对象。
-             * @param repetition 指定如何重复图像。
-             * 可能的值有："repeat" (两个方向重复),"repeat-x" (仅水平方向重复),"repeat-y" (仅垂直方向重复),"no-repeat" (不重复).
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.createPattern = function (image, repetition) {
-                return null;
-            };
-            /**
-             * @private
-             * 返回一个 ImageData 对象，用来描述canvas区域隐含的像素数据，这个区域通过矩形表示，起始点为(sx, sy)、宽为sw、高为sh。
-             * @version Egret 2.4
-             * @platform Web,Native
-             */
-            p.getImageData = function (sx, sy, sw, sh) {
-                native.$cmdManager.flush();
-                var res;
-                if (sx != Math.floor(sx)) {
-                    sx = Math.floor(sx);
-                    sw++;
-                }
-                if (sy != Math.floor(sy)) {
-                    sy = Math.floor(sy);
-                    sh++;
-                }
-                res = this.$nativeContext.getPixels(sx, sy, sw, sh);
-                if (res.pixelData) {
-                    res.data = res.pixelData;
-                }
-                return res;
-            };
-            /**
-             * @private
-             * 设置全局shader
-             * @param filter filter属性生成的json
-             */
-            p.setGlobalShader = function (filter) {
-                native.$cmdManager.setContext(this.$nativeContext);
-                var s1;
-                if (filter) {
-                    s1 = native.$cmdManager.pushString(filter.$toJson());
-                }
-                else {
-                    s1 = native.$cmdManager.pushString("");
-                }
-                native.$cmdManager.setGlobalShader(s1);
-            };
-            return NativeCanvasRenderContext;
-        }(egret.HashObject));
-        native.NativeCanvasRenderContext = NativeCanvasRenderContext;
-        egret.registerClass(NativeCanvasRenderContext,'egret.native.NativeCanvasRenderContext');
-    })(native = egret.native || (egret.native = {}));
-})(egret || (egret = {}));
-//////////////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (c) 2014-present, Egret Technology.
-//  All rights reserved.
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Egret nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
-//
-//  THIS SOFTWARE IS PROVIDED BY EGRET AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
-//  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-//  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-//  IN NO EVENT SHALL EGRET AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//////////////////////////////////////////////////////////////////////////////////////
-var egret;
-(function (egret) {
-    var native;
-    (function (native) {
-        var blendModesForGL = {
-            "source-over": [1, 771],
-            "lighter": [770, 1],
-            "destination-out": [0, 771],
-            "destination-in": [0, 770]
-        };
-        /**
-         * @version Egret 2.4
-         * @platform Web,Native
-         * @private
-         */
-        var OldNativeCanvasRenderContext = (function (_super) {
-            __extends(OldNativeCanvasRenderContext, _super);
-            function OldNativeCanvasRenderContext() {
-                _super.apply(this, arguments);
-                this.$matrix = new egret.Matrix();
-                this.$nativeContext = null;
-                this.$globalCompositeOperation = "source-over";
-                this.$globalAlpha = 1;
-                this.$lineWidth = 0;
-                this.$strokeStyle = "#000000";
-                this.$fillStyle = "#000000";
-                this.$font = "normal normal 10px sans-serif";
-                this.$fontSize = 10;
-                this.$fontFamily = "";
-                this.clipRectArray = null;
-                this.$saveList = [];
-                this.$clipRectArray = [];
-                this.$clipRect = new egret.Rectangle();
-                this.$saveCount = 0;
-                this.$clipList = [];
-                this.savedMatrix = new egret.Matrix();
-                this.$hasStrokeText = false;
-            }
-            var d = __define,c=OldNativeCanvasRenderContext,p=c.prototype;
             d(p, "globalCompositeOperation"
                 /**
                  * @private
@@ -3086,43 +1316,14 @@ var egret;
                 ,function (value) {
                     this.$font = value;
                     var arr = value.split(" ");
-                    var sizeTxt = arr[2];
-                    if (sizeTxt.indexOf("px") != -1) {
-                        this.$fontSize = parseInt(sizeTxt.replace("px", ""));
-                    }
-                    if (egret.useFontMapping) {
-                        var fontFamilyText = void 0;
-                        if (arr.length == 4) {
-                            fontFamilyText = arr[3];
+                    var length = arr.length;
+                    for (var i = 0; i < length; i++) {
+                        var txt = arr[i];
+                        if (txt.indexOf("px") != -1) {
+                            this.$fontSize = parseInt(txt.replace("px", ""));
+                            //console.log("set font" + this.$lineWidth);
+                            return;
                         }
-                        else {
-                            fontFamilyText = arr.slice(3).join(" ");
-                        }
-                        if (fontFamilyText.indexOf(", ") != -1) {
-                            arr = fontFamilyText.split(", ");
-                        }
-                        else if (fontFamilyText.indexOf(",") != -1) {
-                            arr = fontFamilyText.split(",");
-                            var length_7 = arr.length;
-                            for (var i = 0; i < length_7; i++) {
-                                var fontFamily = arr[i];
-                                //暂时先不考虑带有引号的情况
-                                if (egret.fontMapping[fontFamily]) {
-                                    this.$fontFamily = egret.fontMapping[fontFamily];
-                                    return;
-                                }
-                            }
-                        }
-                        else {
-                            this.$fontFamily = egret.fontMapping[fontFamilyText];
-                        }
-                        if (!this.$fontFamily) {
-                            this.$fontFamily = "/system/fonts/DroidSansFallback.ttf";
-                        }
-                    }
-                    else {
-                        //兼容旧版本直接将 default_fontFamily 设置为字体路径的情况
-                        this.$fontFamily = egret.TextField.default_fontFamily;
                     }
                 }
             );
@@ -3490,7 +1691,8 @@ var egret;
              */
             p.fillText = function (text, x, y, maxWidth) {
                 //console.log("drawText" + text);
-                this.$nativeContext.createLabel(this.$fontFamily, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
+                var font = egret.TextField.default_fontFamily;
+                this.$nativeContext.createLabel(font, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
                 this.$hasStrokeText = false;
                 this.$nativeContext.drawText(text, x, y);
             };
@@ -3504,7 +1706,8 @@ var egret;
              * @platform Web,Native
              */
             p.measureText = function (text) {
-                egret_native.Label.createLabel(this.$fontFamily, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
+                var font = egret.TextField.default_fontFamily;
+                egret_native.Label.createLabel(font, this.$fontSize, "", this.$hasStrokeText ? this.$lineWidth : 0);
                 return { width: egret_native.Label.getTextSize(text)[0] };
             };
             /**
@@ -3515,66 +1718,6 @@ var egret;
              * @platform Web,Native
              */
             p.drawImage = function (image, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight) {
-                var bitmapData;
-                var isNative;
-                if (image.$nativeCanvas) {
-                    bitmapData = image.$nativeCanvas;
-                    isNative = true;
-                }
-                else {
-                    bitmapData = image;
-                    isNative = false;
-                }
-                if (!bitmapData) {
-                    return;
-                }
-                if (arguments.length == 3) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = surfaceImageWidth = image.width;
-                    height = surfaceImageHeight = image.height;
-                }
-                else if (arguments.length == 5) {
-                    surfaceOffsetX = offsetX;
-                    surfaceOffsetY = offsetY;
-                    surfaceImageWidth = width;
-                    surfaceImageHeight = height;
-                    offsetX = 0;
-                    offsetY = 0;
-                    width = image.width;
-                    height = image.height;
-                }
-                else {
-                    if (width == void 0) {
-                        width = image.width;
-                    }
-                    if (height == void 0) {
-                        height = image.height;
-                    }
-                    if (surfaceOffsetX == void 0) {
-                        surfaceOffsetX = 0;
-                    }
-                    if (surfaceOffsetY == void 0) {
-                        surfaceOffsetY = 0;
-                    }
-                    if (surfaceImageWidth == void 0) {
-                        surfaceImageWidth = width;
-                    }
-                    if (surfaceImageHeight == void 0) {
-                        surfaceImageHeight = height;
-                    }
-                }
-                //console.log("drawImage::" + offsetX + " " + offsetY + " " + width + " " + height + " " + surfaceOffsetX + " " + surfaceOffsetY + " " + surfaceImageWidth + " " + surfaceImageHeight);
-                //console.log("drawImage::" + bitmapData);
-                this.$nativeContext.drawImage(bitmapData, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight);
-            };
-            /**
-             * @private
-             * draw mesh
-             */
-            p.drawMesh = function (image, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices) {
                 var bitmapData;
                 if (image.$nativeCanvas) {
                     bitmapData = image.$nativeCanvas;
@@ -3623,66 +1766,9 @@ var egret;
                         surfaceImageHeight = height;
                     }
                 }
-                this.vertices = new Float32Array(meshVertices.length / 2 * 5);
-                this.indicesForMesh = new Uint32Array(meshIndices.length);
-                this.cacheArrays(this.$matrix, 1, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices);
-                this.$nativeContext.drawMesh(bitmapData, this.vertices, this.indicesForMesh, this.vertices.length, this.indicesForMesh.length);
-            };
-            p.cacheArrays = function (transform, alpha, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight, textureSourceWidth, textureSourceHeight, meshUVs, meshVertices, meshIndices) {
-                //计算出绘制矩阵，之后把矩阵还原回之前的
-                var locWorldTransform = transform;
-                var originalA = locWorldTransform.a;
-                var originalB = locWorldTransform.b;
-                var originalC = locWorldTransform.c;
-                var originalD = locWorldTransform.d;
-                var originalTx = locWorldTransform.tx;
-                var originalTy = locWorldTransform.ty;
-                if (destX != 0 || destY != 0) {
-                    locWorldTransform.append(1, 0, 0, 1, destX, destY);
-                }
-                if (sourceWidth / destWidth != 1 || sourceHeight / destHeight != 1) {
-                    locWorldTransform.append(destWidth / sourceWidth, 0, 0, destHeight / sourceHeight, 0, 0);
-                }
-                var a = locWorldTransform.a;
-                var b = locWorldTransform.b;
-                var c = locWorldTransform.c;
-                var d = locWorldTransform.d;
-                var tx = locWorldTransform.tx;
-                var ty = locWorldTransform.ty;
-                locWorldTransform.a = originalA;
-                locWorldTransform.b = originalB;
-                locWorldTransform.c = originalC;
-                locWorldTransform.d = originalD;
-                locWorldTransform.tx = originalTx;
-                locWorldTransform.ty = originalTy;
-                if (meshVertices) {
-                    // 计算索引位置与赋值
-                    var vertices = this.vertices;
-                    // 缓存顶点数组
-                    var i = 0, iD = 0, l = 0;
-                    var u = 0, v = 0, x = 0, y = 0;
-                    for (i = 0, l = meshUVs.length; i < l; i += 2) {
-                        iD = i * 5 / 2;
-                        x = meshVertices[i];
-                        y = meshVertices[i + 1];
-                        u = meshUVs[i];
-                        v = meshUVs[i + 1];
-                        // xy
-                        vertices[iD + 0] = a * x + c * y + tx;
-                        vertices[iD + 1] = b * x + d * y + ty;
-                        // uv
-                        vertices[iD + 2] = (sourceX + u * sourceWidth) / textureSourceWidth;
-                        vertices[iD + 3] = (sourceY + v * sourceHeight) / textureSourceHeight;
-                        // alpha
-                        vertices[iD + 4] = alpha;
-                    }
-                    for (i = 0; i < meshIndices.length; i++) {
-                        this.indicesForMesh[i] = meshIndices[i];
-                    }
-                }
-                else {
-                    console.log("meshVertices not exist");
-                }
+                //console.log("drawImage::" + offsetX + " " + offsetY + " " + width + " " + height + " " + surfaceOffsetX + " " + surfaceOffsetY + " " + surfaceImageWidth + " " + surfaceImageHeight);
+                //console.log("drawImage::" + bitmapData);
+                this.$nativeContext.drawImage(bitmapData, offsetX, offsetY, width, height, surfaceOffsetX, surfaceOffsetY, surfaceImageWidth, surfaceImageHeight);
             };
             /**
              * @private
@@ -3718,23 +1804,15 @@ var egret;
                 }
                 return res;
             };
-            /**
-             * @private
-             * 设置全局shader
-             * @param filter filter属性生成的json
-             */
-            p.setGlobalShader = function (filter) {
-                egret_native.Graphics.setGlobalShader(filter);
-            };
-            return OldNativeCanvasRenderContext;
+            return NativeCanvasRenderContext;
         }(egret.HashObject));
-        native.OldNativeCanvasRenderContext = OldNativeCanvasRenderContext;
-        egret.registerClass(OldNativeCanvasRenderContext,'egret.native.OldNativeCanvasRenderContext');
+        native.NativeCanvasRenderContext = NativeCanvasRenderContext;
+        egret.registerClass(NativeCanvasRenderContext,'egret.native.NativeCanvasRenderContext');
     })(native = egret.native || (egret.native = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -3777,7 +1855,7 @@ var egret;
                 _super.call(this);
                 this.$width = 0;
                 this.$height = 0;
-                this.renderContext = native.$supportCmdBatch ? new native.NativeCanvasRenderContext() : new native.OldNativeCanvasRenderContext();
+                this.renderContext = new native.NativeCanvasRenderContext();
             }
             var d = __define,c=NativeCanvas,p=c.prototype;
             p.toDataURL = function (type) {
@@ -3812,13 +1890,7 @@ var egret;
                                 egret_native.setScreenCanvas(this.$nativeCanvas);
                             }
                             var context = this.$nativeCanvas.getContext("2d");
-                            if (native.$supportCmdBatch) {
-                                native.$cmdManager.setContext(context);
-                                native.$cmdManager.clearScreen(0, 0, 0, 0);
-                            }
-                            else {
-                                context.clearScreen(0, 0, 0, 0);
-                            }
+                            context.clearScreen(0, 0, 0, 0);
                             this.renderContext.$nativeContext = context;
                         }
                         else {
@@ -3844,13 +1916,7 @@ var egret;
                                 egret_native.setScreenCanvas(this.$nativeCanvas);
                             }
                             var context = this.$nativeCanvas.getContext("2d");
-                            if (native.$supportCmdBatch) {
-                                native.$cmdManager.setContext(context);
-                                native.$cmdManager.clearScreen(0, 0, 0, 0);
-                            }
-                            else {
-                                context.clearScreen(0, 0, 0, 0);
-                            }
+                            context.clearScreen(0, 0, 0, 0);
                             this.renderContext.$nativeContext = context;
                         }
                         else {
@@ -3870,7 +1936,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -3948,10 +2014,6 @@ var egret;
              * @param useMaxSize 若传入true，则将改变后的尺寸与已有尺寸对比，保留较大的尺寸。
              */
             p.resize = function (width, height, useMaxSize) {
-                //resize 之前要提交下绘制命令
-                if (native.$supportCmdBatch) {
-                    native.$cmdManager.flush();
-                }
                 var surface = this.surface;
                 surface.width = width;
                 surface.height = height;
@@ -3965,10 +2027,6 @@ var egret;
              * @param offsetY 原始图像数据在改变后缓冲区的绘制起始位置y
              */
             p.resizeTo = function (width, height, offsetX, offsetY) {
-                //resize 之前要提交下绘制命令
-                if (native.$supportCmdBatch) {
-                    native.$cmdManager.flush();
-                }
                 if (!sharedCanvas) {
                     sharedCanvas = createCanvas();
                 }
@@ -4016,12 +2074,10 @@ var egret;
                 this.context.restore();
             };
             /**
-             * 获取指定区域的像素
+             * 获取指定坐标的像素
              */
-            p.getPixels = function (x, y, width, height) {
-                if (width === void 0) { width = 1; }
-                if (height === void 0) { height = 1; }
-                return this.context.getImageData(x, y, width, height).data;
+            p.getPixel = function (x, y) {
+                return this.context.getImageData(x, y, 1, 1).data;
             };
             /**
              * 转换成base64字符串，如果图片（或者包含的图片）跨域，则返回null
@@ -4055,7 +2111,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -4089,7 +2145,7 @@ var egret;
          * @private
          */
         function convertImageToRenderTexture(texture, rect) {
-            var buffer = egret.sys.canvasHitTestBuffer;
+            var buffer = egret.sys.hitTestBuffer;
             var w = texture.$getTextureWidth();
             var h = texture.$getTextureHeight();
             if (rect == null) {
@@ -4112,7 +2168,7 @@ var egret;
             var offsetY = Math.round(bitmapData._offsetY);
             var bitmapWidth = bitmapData._bitmapWidth;
             var bitmapHeight = bitmapData._bitmapHeight;
-            buffer.context.drawImage(bitmapData._bitmapData.source, bitmapData._bitmapX + rect.x / egret.$TextureScaleFactor, bitmapData._bitmapY + rect.y / egret.$TextureScaleFactor, bitmapWidth * rect.width / w, bitmapHeight * rect.height / h, offsetX, offsetY, rect.width, rect.height);
+            buffer.context.drawImage(bitmapData._bitmapData, bitmapData._bitmapX + rect.x / egret.$TextureScaleFactor, bitmapData._bitmapY + rect.y / egret.$TextureScaleFactor, bitmapWidth * rect.width / w, bitmapHeight * rect.height / h, offsetX, offsetY, rect.width, rect.height);
             return surface;
         }
         /**
@@ -4143,19 +2199,14 @@ var egret;
             egret.$error(1035);
             return null;
         }
-        function getPixels(x, y, width, height) {
-            egret.$error(1035);
-            return null;
-        }
         egret.Texture.prototype.toDataURL = toDataURL;
         egret.Texture.prototype.saveToFile = saveToFile;
         egret.Texture.prototype.getPixel32 = getPixel32;
-        egret.Texture.prototype.getPixels = getPixels;
     })(native = egret.native || (egret.native = {}));
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -4212,7 +2263,7 @@ var egret;
                         }
                     }, this);
                 }
-                var buffer = new egret.sys.RenderBuffer(undefined, undefined, true);
+                var buffer = new egret.sys.RenderBuffer();
                 var canvas = buffer.surface;
                 canvas.$isRoot = true;
                 var touch = new native.NativeTouchHandler(stage);
@@ -4277,7 +2328,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -4311,451 +2362,6 @@ var egret;
          * @private
          */
         native.$supportCanvas = egret_native.Canvas ? true : false;
-        /**
-         * @private
-         * 判断当前runtime版本是否支持cmdBatch
-         */
-        native.$supportCmdBatch = egret_native.sendToC ? true : false;
-        /*
-         * @private
-         * 命令控制器
-         * */
-        var CmdManager = (function () {
-            function CmdManager() {
-                /*
-                 * 存储绘制命令的 array buffer
-                 **/
-                this.maxArrayBufferLen = 80000;
-                this.arrayBuffer = new ArrayBuffer(this.maxArrayBufferLen * 4);
-                this.uint32View = new Uint32Array(this.arrayBuffer);
-                this.float32View = new Float32Array(this.arrayBuffer);
-                this.arrayBufferLen = 0;
-                /*
-                 * 存储字符串的数组
-                 */
-                this.strArray = [];
-            }
-            var d = __define,c=CmdManager,p=c.prototype;
-            /*
-             * 上传绘制命令到C
-             */
-            p.flush = function () {
-                egret_native.sendToC(this.float32View, this.arrayBufferLen, this.strArray);
-                this.clear();
-            };
-            /*
-             * 切换native上下文
-             * native绘制需要在自身的上下文进行绘制
-             */
-            p.setContext = function (ctx) {
-                if (this.context != ctx) {
-                    if (this.arrayBufferLen + 3 > this.maxArrayBufferLen) {
-                        this.flush();
-                    }
-                    this.context = ctx;
-                    var uint32View = this.uint32View;
-                    var arrayBufferLen = this.arrayBufferLen;
-                    uint32View[arrayBufferLen++] = 1000;
-                    // uint32View[arrayBufferLen++] = ctx.___native_texture__p;
-                    // 兼容64位
-                    var addr = ctx.___native_texture__p;
-                    uint32View[arrayBufferLen++] = (addr / 4294967296) >>> 0;
-                    uint32View[arrayBufferLen++] = (addr & 4294967295) >>> 0;
-                    // uint32View[arrayBufferLen++] = addr >> 32;
-                    // uint32View[arrayBufferLen++] = addr & 4294967295;
-                    this.arrayBufferLen = arrayBufferLen;
-                }
-            };
-            /*
-             * 清空绘制命令
-             */
-            p.clear = function () {
-                this.arrayBufferLen = 0;
-                this.strArray.length = 0;
-            };
-            /*
-             * 压入一个字符串并返回索引
-             */
-            p.pushString = function (str) {
-                var array = this.strArray;
-                var len = array.length;
-                array[len] = str;
-                return len;
-            };
-            //------绘制命令 start-------------
-            p.clearScreen = function (i1, i2, i3, i4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 100;
-                uint32View[arrayBufferLen++] = i1;
-                uint32View[arrayBufferLen++] = i2;
-                uint32View[arrayBufferLen++] = i3;
-                uint32View[arrayBufferLen++] = i4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.drawImage = function (i1, f1, f2, f3, f4, f5, f6, f7, f8) {
-                if (this.arrayBufferLen + 11 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 101;
-                // uint32View[arrayBufferLen++] = i1;
-                // 兼容64位
-                // uint32View[arrayBufferLen++] = i1 >> 32;
-                // uint32View[arrayBufferLen++] = i1 & 4294967295;
-                uint32View[arrayBufferLen++] = (i1 / 4294967296) >>> 0;
-                uint32View[arrayBufferLen++] = (i1 & 4294967295) >>> 0;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                float32View[arrayBufferLen++] = f5;
-                float32View[arrayBufferLen++] = f6;
-                float32View[arrayBufferLen++] = f7;
-                float32View[arrayBufferLen++] = f8;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setTransform = function (f1, f2, f3, f4, f5, f6) {
-                if (this.arrayBufferLen + 7 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 103;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                float32View[arrayBufferLen++] = f5;
-                float32View[arrayBufferLen++] = f6;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setGlobalAlpha = function (f1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 106;
-                float32View[arrayBufferLen++] = f1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.pushRectStencils = function (array) {
-                var len = array.length;
-                if (this.arrayBufferLen + len + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 113;
-                uint32View[arrayBufferLen++] = len;
-                for (var i = 0; i < len; i++) {
-                    float32View[arrayBufferLen++] = array[i];
-                }
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.restore = function () {
-                if (this.arrayBufferLen + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                this.uint32View[this.arrayBufferLen++] = 116;
-            };
-            p.save = function () {
-                if (this.arrayBufferLen + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                this.uint32View[this.arrayBufferLen++] = 117;
-            };
-            p.setBlendArg = function (f1, f2) {
-                if (this.arrayBufferLen + 3 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 120;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.beginPath = function () {
-                if (this.arrayBufferLen + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                this.uint32View[this.arrayBufferLen++] = 204;
-            };
-            p.closePath = function () {
-                if (this.arrayBufferLen + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                this.uint32View[this.arrayBufferLen++] = 205;
-            };
-            p.rect = function (f1, f2, f3, f4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 210;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.clearRect = function (f1, f2, f3, f4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 214;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.createLabel = function (i1, f1, i2, f2) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 300;
-                uint32View[arrayBufferLen++] = i1;
-                float32View[arrayBufferLen++] = f1;
-                uint32View[arrayBufferLen++] = i2;
-                float32View[arrayBufferLen++] = f2;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.drawText = function (i1, f1, f2) {
-                if (this.arrayBufferLen + 4 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 301;
-                uint32View[arrayBufferLen++] = i1;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setTextColor = function (i1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 302;
-                uint32View[arrayBufferLen++] = i1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setStrokeColor = function (i1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 303;
-                uint32View[arrayBufferLen++] = i1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setFillStyle = function (i1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 1200;
-                uint32View[arrayBufferLen++] = i1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setStrokeStyle = function (i1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 1201;
-                uint32View[arrayBufferLen++] = i1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setLineWidth = function (f1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 1202;
-                float32View[arrayBufferLen++] = f1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.moveTo = function (f1, f2) {
-                if (this.arrayBufferLen + 3 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 207;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.lineTo = function (f1, f2) {
-                if (this.arrayBufferLen + 3 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 208;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.fill = function (i1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 203;
-                uint32View[arrayBufferLen++] = i1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.pushClip = function (f1, f2, f3, f4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 107;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.popClip = function () {
-                if (this.arrayBufferLen + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                this.uint32View[this.arrayBufferLen++] = 108;
-            };
-            p.stroke = function () {
-                if (this.arrayBufferLen + 1 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                this.uint32View[this.arrayBufferLen++] = 206;
-            };
-            p.arc = function (f1, f2, f3, f4, f5, i6) {
-                if (this.arrayBufferLen + 7 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 209;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                float32View[arrayBufferLen++] = f5;
-                uint32View[arrayBufferLen++] = i6;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.quadraticCurveTo = function (f1, f2, f3, f4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 211;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.fillRect = function (f1, f2, f3, f4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 212;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.strokeRect = function (f1, f2, f3, f4) {
-                if (this.arrayBufferLen + 5 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 213;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.bezierCurveTo = function (f1, f2, f3, f4, f5, f6) {
-                if (this.arrayBufferLen + 7 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var float32View = this.float32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 215;
-                float32View[arrayBufferLen++] = f1;
-                float32View[arrayBufferLen++] = f2;
-                float32View[arrayBufferLen++] = f3;
-                float32View[arrayBufferLen++] = f4;
-                float32View[arrayBufferLen++] = f5;
-                float32View[arrayBufferLen++] = f6;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            p.setGlobalShader = function (i1) {
-                if (this.arrayBufferLen + 2 > this.maxArrayBufferLen) {
-                    this.flush();
-                }
-                var uint32View = this.uint32View;
-                var arrayBufferLen = this.arrayBufferLen;
-                uint32View[arrayBufferLen++] = 111;
-                uint32View[arrayBufferLen++] = i1;
-                this.arrayBufferLen = arrayBufferLen;
-            };
-            return CmdManager;
-        }());
-        egret.registerClass(CmdManager,'CmdManager');
-        /*
-         * @private
-         * 输出一个单例命令控制器，供所有需要调用的地方使用
-         */
-        native.$cmdManager = new CmdManager();
         var isRunning = false;
         var playerList = [];
         function runEgret(options) {
@@ -4779,10 +2385,7 @@ var egret;
             catch (e) {
             }
             var ticker = egret.sys.$ticker;
-            var mainLoop = native.$supportCmdBatch ? function () {
-                ticker.update();
-                native.$cmdManager.flush();
-            } : function () {
+            var mainLoop = function () {
                 ticker.update();
             };
             egret_native.executeMainLoop(mainLoop, ticker);
@@ -4797,8 +2400,7 @@ var egret;
             //todo
             var player = new native.NativePlayer();
             playerList.push(player);
-            egret.sys.customHitTestBuffer = new native.NativeCanvasRenderBuffer(3, 3);
-            egret.sys.canvasHitTestBuffer = egret.sys.customHitTestBuffer;
+            egret.sys.hitTestBuffer = new native.NativeCanvasRenderBuffer(3, 3);
             //老版本runtime不支持canvas,关闭脏矩形
             if (!native.$supportCanvas) {
                 player.$stage.dirtyRegionPolicy = egret.DirtyRegionPolicy.OFF;
@@ -4813,14 +2415,11 @@ var egret;
         function setRenderMode(renderMode) {
             if (native.$supportCanvas) {
                 egret.sys.RenderBuffer = native.NativeCanvasRenderBuffer;
-                egret.sys.CanvasRenderBuffer = native.NativeCanvasRenderBuffer;
             }
             else {
                 egret.sys.RenderBuffer = native.NativeRenderTextureRenderBuffer;
-                egret.sys.CanvasRenderBuffer = native.NativeRenderTextureRenderBuffer;
             }
             egret.sys.systemRenderer = new egret.CanvasRenderer();
-            egret.sys.canvasRenderer = egret.sys.systemRenderer;
             egret.Capabilities.$renderMode = "canvas";
         }
         function updateAllScreens() {
@@ -4848,9 +2447,9 @@ var egret;
         if (DEBUG) {
             egret.log = function () {
                 if (DEBUG) {
-                    var length_8 = arguments.length;
+                    var length = arguments.length;
                     var info = "";
-                    for (var i = 0; i < length_8; i++) {
+                    for (var i = 0; i < length; i++) {
                         info += arguments[i] + " ";
                     }
                     egret.sys.$logToFPS(info);
@@ -4869,7 +2468,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -4899,14 +2498,10 @@ var egret;
 (function (egret) {
     var native;
     (function (native) {
-        /**
-         * @private
-         */
         var NativeFps = (function (_super) {
             __extends(NativeFps, _super);
             function NativeFps(stage, showFPS, showLog, logFilter, styles) {
                 _super.call(this);
-                this.arrFps = [];
                 this.arrLog = [];
                 if (showFPS || showLog) {
                     this.panelX = styles["x"] === undefined ? 0 : parseInt(styles['x']);
@@ -4953,26 +2548,8 @@ var egret;
             };
             ;
             p.update = function (datas) {
-                this.arrFps.push(datas.fps);
-                var fpsTotal = 0;
-                var lenFps = this.arrFps.length;
-                if (lenFps > 101) {
-                    lenFps = 101;
-                    this.arrFps.shift();
-                }
-                var fpsMin = this.arrFps[0];
-                var fpsMax = this.arrFps[0];
-                for (var i = 0; i < lenFps; i++) {
-                    var num = this.arrFps[i];
-                    fpsTotal += num;
-                    if (num < fpsMin)
-                        fpsMin = num;
-                    else if (num > fpsMax)
-                        fpsMax = num;
-                }
                 this.textFps.textFlow = [
                     { text: datas.fps + " FPS " + egret.Capabilities.renderMode + "\n" },
-                    { text: "min" + fpsMin + " max" + fpsMax + " avg" + Math.floor(fpsTotal / lenFps) + "\n" },
                     { text: "Draw: " + datas.draw + "\nDirty: " + datas.dirty + "%\n" },
                     { text: "Cost: " },
                     { text: datas.costTicker + " ", style: { "textColor": 0x18fefe } },
@@ -5020,7 +2597,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5062,7 +2639,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5135,7 +2712,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5242,7 +2819,7 @@ var egret;
                 startTime = +startTime || 0;
                 loops = +loops || 0;
                 if (DEBUG && this.loaded == false) {
-                    egret.$error(1049);
+                    egret.$error(3001);
                 }
                 var audio = NativeSound.$pop(this.url);
                 if (audio == null) {
@@ -5330,7 +2907,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5475,7 +3052,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5582,7 +3159,7 @@ var egret;
                 startTime = +startTime || 0;
                 loops = +loops || 0;
                 if (DEBUG && this.loaded == false) {
-                    egret.$error(1049);
+                    egret.$error(3001);
                 }
                 var channel = new native.NaSoundChannel();
                 channel.$url = this.url;
@@ -5635,7 +3212,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5763,7 +3340,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -5877,14 +3454,14 @@ var egret;
                 this.loading = true;
                 this.loaded = false;
                 if (cache && !egret_native.isFileExists(url)) {
-                    var self_1 = this;
+                    var self = this;
                     var promise = egret.PromiseObject.create();
                     promise.onSuccessFunc = function () {
-                        self_1.loadEnd();
+                        self.loadEnd();
                     };
                     promise.onErrorFunc = function () {
                         egret.$warn(1048);
-                        self_1.dispatchEventWith(egret.IOErrorEvent.IO_ERROR);
+                        self.dispatchEventWith(egret.IOErrorEvent.IO_ERROR);
                     };
                     egret_native.download(url, url, promise);
                 }
@@ -6260,7 +3837,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -6311,15 +3888,6 @@ var egret;
              * @returns
              */
             function setItem(key, value) {
-                if (value === undefined) {
-                    value = "undefined";
-                }
-                else if (value === null) {
-                    value = "null";
-                }
-                else {
-                    value = value.toString();
-                }
                 localStorageData[key] = value;
                 try {
                     save();
@@ -6377,7 +3945,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -6436,7 +4004,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -6562,7 +4130,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided this the following conditions are met:
@@ -6637,7 +4205,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -6770,7 +4338,7 @@ var egret;
                     var promise = egret.PromiseObject.create();
                     promise.onSuccessFunc = function (getted_str) {
                         self._response = getted_str;
-                        egret.$callAsync(egret.Event.dispatchEvent, egret.Event, self, egret.Event.COMPLETE);
+                        egret.callLater(egret.Event.dispatchEvent, egret.Event, self, egret.Event.COMPLETE);
                     };
                     promise.onErrorFunc = function (error_code) {
                         egret.$warn(1019, error_code);
@@ -6873,7 +4441,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -6968,7 +4536,7 @@ var egret;
                 var self = this;
                 var promise = new egret.PromiseObject();
                 promise.onSuccessFunc = function (bitmapData) {
-                    self.data = new egret.BitmapData(bitmapData);
+                    self.data = bitmapData;
                     self.dispatchEventWith(egret.Event.COMPLETE);
                 };
                 promise.onErrorFunc = function () {
@@ -6998,7 +4566,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -7123,8 +4691,6 @@ var egret;
              */
             p.$show = function () {
                 var self = this;
-                var textfield = this.$textfield;
-                var values = textfield.$TextField;
                 egret_native.TextInputOp.setKeybordOpen(false);
                 egret_native.EGT_getTextEditerContentText = function () {
                     return self.$getText();
@@ -7135,16 +4701,13 @@ var egret;
                     self.showScreenKeyboard();
                     egret_native.EGT_keyboardDidShow = function () {
                     };
-                    if (egret_native.TextInputOp.updateConfig) {
-                        egret_native.TextInputOp.updateConfig(JSON.stringify({
-                            "font_color": values[2 /* textColor */]
-                        }));
-                    }
                 };
                 egret_native.EGT_keyboardDidHide = function () {
                 };
                 egret_native.EGT_deleteBackward = function () {
                 };
+                var textfield = this.$textfield;
+                var values = textfield.$TextField;
                 var inputType = values[37 /* inputType */];
                 var inputMode = values[30 /* multiline */] ? 0 : 6;
                 var inputFlag = -1; //textfield.displayAsPassword ? 0 : -1;
@@ -7168,9 +4731,7 @@ var egret;
                     "width": textfield.width,
                     "height": textfield.height,
                     "font_size": values[0 /* fontSize */],
-                    "font_color": values[2 /* textColor */],
-                    "textAlign": values[9 /* textAlign */],
-                    "verticalAlign": values[10 /* verticalAlign */]
+                    "font_color": values[2 /* textColor */]
                 }));
             };
             /**
@@ -7200,7 +4761,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -7303,8 +4864,6 @@ var egret;
          */
         function parse(text) {
             var xmlDocStr = egret_native.xmlStr2JsonStr(text);
-            //替换换行符
-            xmlDocStr = xmlDocStr.replace(/\n/g, "\\n");
             var xmlDoc = JSON.parse(xmlDocStr);
             return parseNode(xmlDoc, null);
         }
@@ -7320,7 +4879,7 @@ var egret;
             var nodeAttributes = node.attributes;
             var attributes = xml.attributes;
             for (var key in nodeAttributes) {
-                attributes[key] = xml["$" + key] = nodeAttributes[key];
+                attributes[key] = nodeAttributes[key];
             }
             var childNodes = node.children;
             var length = childNodes.length;
@@ -7349,7 +4908,7 @@ var egret;
 })(egret || (egret = {}));
 //////////////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-present, Egret Technology.
+//  Copyright (c) 2014-2015, Egret Technology Inc.
 //  All rights reserved.
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
